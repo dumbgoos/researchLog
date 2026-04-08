@@ -67,4 +67,53 @@ describe("repository smoke tests", () => {
     const snapshot = await repository.getWorkspaceSnapshot();
     expect(snapshot.vaultAuditLogs.some((audit) => audit.actionType === "reveal")).toBe(true);
   });
+
+  test("reviews and deletes research map relations through the API route", async () => {
+    const { prisma } = await import("./prisma");
+    const { PATCH, DELETE } = await import("../app/api/research-map/relations/[id]/route");
+    const snapshot = await import("./repository").then((repository) => repository.getWorkspaceSnapshot());
+    const [sourceIdea, targetIdea] = snapshot.ideas;
+
+    expect(sourceIdea).toBeDefined();
+    expect(targetIdea).toBeDefined();
+
+    const relation = await prisma.ideaRelation.create({
+      data: {
+        id: `relation-test-${crypto.randomUUID()}`,
+        sourceIdeaId: sourceIdea.id,
+        targetIdeaId: targetIdea.id,
+        relationType: "Extends",
+        confidence: 0.82,
+        rationale: "API route smoke test relation",
+        evidenceJson: JSON.stringify(["test evidence"]),
+        modelProvider: "rule-engine",
+        modelName: "local-rules-v1",
+        analysisVersion: `test-${crypto.randomUUID()}`
+      }
+    });
+
+    const patchResponse = await PATCH(
+      new Request("http://localhost/api/research-map/relations/test", {
+        body: JSON.stringify({ status: "Accepted", reviewNote: "Reviewed in route test." }),
+        method: "PATCH"
+      }) as Parameters<typeof PATCH>[0],
+      { params: Promise.resolve({ id: relation.id }) }
+    );
+    const patched = await patchResponse.json();
+
+    expect(patchResponse.status).toBe(200);
+    expect(patched.status).toBe("Accepted");
+    expect(patched.reviewNote).toBe("Reviewed in route test.");
+
+    const deleteResponse = await DELETE(
+      new Request("http://localhost/api/research-map/relations/test") as Parameters<typeof DELETE>[0],
+      { params: Promise.resolve({ id: relation.id }) }
+    );
+    const deleted = await deleteResponse.json();
+
+    expect(deleteResponse.status).toBe(200);
+    expect(deleted.ok).toBe(true);
+    const deletedRelation = await prisma.ideaRelation.findUnique({ where: { id: relation.id } });
+    expect(deletedRelation).toBeNull();
+  });
 });
