@@ -62,6 +62,7 @@ For checks:
 bun test
 bunx tsc --noEmit
 bun run build
+bun run test:e2e
 ```
 
 For database updates:
@@ -76,3 +77,5 @@ For migration-based environments:
 bun run db:migrate
 bun run db:deploy
 ```
+
+Deployment preflight and secret handling notes live in `DEPLOYMENT.md`.
