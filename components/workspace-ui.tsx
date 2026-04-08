@@ -166,6 +166,7 @@ function Field({
   label,
   placeholder,
   defaultValue,
+  markdown,
   textarea,
   required
 }: {
@@ -173,9 +174,22 @@ function Field({
   label: string;
   placeholder: string;
   defaultValue?: string;
+  markdown?: boolean;
   textarea?: boolean;
   required?: boolean;
 }) {
+  if (textarea && markdown) {
+    return (
+      <MarkdownTextarea
+        defaultValue={defaultValue}
+        label={label}
+        name={name}
+        placeholder={placeholder}
+        required={required}
+      />
+    );
+  }
+
   return (
     <label className="field">
       <span>{label}</span>
@@ -184,6 +198,49 @@ function Field({
       ) : (
         <input defaultValue={defaultValue} name={name} placeholder={placeholder} required={required} />
       )}
+    </label>
+  );
+}
+
+function MarkdownTextarea({
+  defaultValue,
+  label,
+  name,
+  placeholder,
+  required
+}: {
+  defaultValue?: string;
+  label: string;
+  name: string;
+  placeholder: string;
+  required?: boolean;
+}) {
+  const [value, setValue] = useState(defaultValue ?? "");
+  const insertSnippet = (snippet: string) => {
+    setValue((current) => [current.trimEnd(), snippet].filter(Boolean).join("\n"));
+  };
+
+  return (
+    <label className="field markdown-editor">
+      <span>{label}</span>
+      <div className="markdown-toolbar" aria-label={`${label} formatting`}>
+        <button className="secondary-button compact-button" onClick={() => insertSnippet("### Heading")} type="button">
+          Heading
+        </button>
+        <button className="secondary-button compact-button" onClick={() => insertSnippet("- Observation")} type="button">
+          Bullet
+        </button>
+        <button className="secondary-button compact-button" onClick={() => insertSnippet("```bash\ncommand\n```")} type="button">
+          Code
+        </button>
+      </div>
+      <textarea
+        name={name}
+        onChange={(event) => setValue(event.target.value)}
+        placeholder={placeholder}
+        required={required}
+        value={value}
+      />
     </label>
   );
 }
@@ -351,7 +408,7 @@ function CreateExperimentPanel({
           <Field name="modelName" label="Model" placeholder="model name" />
           <Field name="datasetName" label="Dataset" placeholder="dataset name" />
         </div>
-        <Field name="methodChanges" label="Method changes (Markdown)" placeholder="What changed from the previous run?" textarea />
+        <Field name="methodChanges" label="Method changes (Markdown)" placeholder="What changed from the previous run?" markdown textarea />
         <div className="form-pair">
           <Field name="datasetVersion" label="Dataset version" placeholder="v1, split hash, date" />
           <Field name="runtimeEnv" label="Runtime env" placeholder="server, conda env, docker image" />
@@ -369,8 +426,8 @@ function CreateExperimentPanel({
         <Field name="ckptPath" label="Checkpoint path" placeholder="checkpoints/run.pt" />
         <Field name="resultMetricsJson" label="Metrics JSON" placeholder="{ }" defaultValue="{}" textarea />
         <Field name="resultSummary" label="Result summary" placeholder="What happened?" textarea />
-        <Field name="analysis" label="Analysis (Markdown)" placeholder="Why did it happen?" textarea />
-        <Field name="nextSteps" label="Next steps (Markdown)" placeholder="What should happen next?" textarea />
+        <Field name="analysis" label="Analysis (Markdown)" placeholder="Why did it happen?" markdown textarea />
+        <Field name="nextSteps" label="Next steps (Markdown)" placeholder="What should happen next?" markdown textarea />
         <div className="form-actions">
           <button className="button" disabled={disabled} type="submit">
             Save experiment
@@ -435,6 +492,7 @@ function ExperimentDetailPanel({
           name="methodChanges"
           label="Method changes (Markdown)"
           placeholder="Changes from previous runs"
+          markdown
           textarea
         />
         <div className="form-pair">
@@ -472,8 +530,8 @@ function ExperimentDetailPanel({
           placeholder="What happened?"
           textarea
         />
-        <Field defaultValue={experiment.analysis} name="analysis" label="Analysis (Markdown)" placeholder="Why did it happen?" textarea />
-        <Field defaultValue={experiment.nextSteps} name="nextSteps" label="Next steps (Markdown)" placeholder="What should happen next?" textarea />
+        <Field defaultValue={experiment.analysis} name="analysis" label="Analysis (Markdown)" placeholder="Why did it happen?" markdown textarea />
+        <Field defaultValue={experiment.nextSteps} name="nextSteps" label="Next steps (Markdown)" placeholder="What should happen next?" markdown textarea />
         <div className="form-actions">
           <button className="button" disabled={disabled} type="submit">
             Update experiment
@@ -536,7 +594,7 @@ function CreateDecisionPanel({
             ))}
           </select>
         </label>
-        <Field name="content" label="Reasoning (Markdown)" placeholder="Why are we making this move?" textarea required />
+        <Field name="content" label="Reasoning (Markdown)" placeholder="Why are we making this move?" markdown textarea required />
         <div className="form-actions">
           <button className="button" disabled={disabled} type="submit">
             Save decision
@@ -594,7 +652,7 @@ function DecisionDetailPanel({
             ))}
           </select>
         </label>
-        <Field defaultValue={decision.content} name="content" label="Reasoning (Markdown)" placeholder="Why this decision?" textarea required />
+        <Field defaultValue={decision.content} name="content" label="Reasoning (Markdown)" placeholder="Why this decision?" markdown textarea required />
         <div className="form-actions">
           <button className="button" disabled={disabled} type="submit">
             Update decision
@@ -1315,6 +1373,9 @@ function IdeaList({
                   Open
                 </button>
               )}
+              <a className="secondary-button compact-button inline-link-button" href={`/ideas/${encodeURIComponent(idea.id)}`}>
+                Page
+              </a>
               {onDeleteIdea && (
                 <button className="danger-button" disabled={disabled} onClick={() => onDeleteIdea(idea.id)} type="button">
                   Delete
@@ -1388,6 +1449,9 @@ function ExperimentList({
                   Open
                 </button>
               )}
+              <a className="secondary-button compact-button inline-link-button" href={`/experiments/${encodeURIComponent(experiment.id)}`}>
+                Page
+              </a>
               {onToggleCompare && (
                 <button
                   className="secondary-button compact-button"
@@ -1469,6 +1533,9 @@ function DecisionList({
                   Open
                 </button>
               )}
+              <a className="secondary-button compact-button inline-link-button" href={`/decisions/${encodeURIComponent(decision.id)}`}>
+                Page
+              </a>
               {onDeleteDecision && (
                 <button
                   className="danger-button"
