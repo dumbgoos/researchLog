@@ -80,12 +80,28 @@ function ResearchMapSummary({
   visibleRelations: number;
 }) {
   const latestJob = map.jobs[0];
+  const statusCounts = map.relations.reduce<Record<IdeaRelationStatus, number>>(
+    (counts, relation) => {
+      counts[relation.status] += 1;
+      return counts;
+    },
+    { Suggested: 0, Accepted: 0, Hidden: 0, Rejected: 0 }
+  );
 
   return (
-    <div className="card">
+    <div className="card graph-status-card">
       <div className="card-title">
-        <h2>Graph Status</h2>
+        <div>
+          <h2>Graph Status</h2>
+          <p className="microcopy">Review queue, model health, and relation coverage.</p>
+        </div>
         <span className="pill">{latestJob?.status ?? "not generated"}</span>
+      </div>
+      <div className="review-progress" aria-label="Research map review progress">
+        <ReviewStatusItem label="Suggested" tone="suggested" value={statusCounts.Suggested} />
+        <ReviewStatusItem label="Accepted" tone="accepted" value={statusCounts.Accepted} />
+        <ReviewStatusItem label="Hidden" tone="hidden" value={statusCounts.Hidden} />
+        <ReviewStatusItem label="Rejected" tone="rejected" value={statusCounts.Rejected} />
       </div>
       <div className="metadata-grid">
         <Metric label="Ideas" value={ideas.length} />
@@ -125,13 +141,18 @@ function AISettingsPanel({
   settings: AIAnalysisSettings;
 }) {
   return (
-    <div className="card detail-card">
+    <div className="card detail-card settings-card">
       <div className="card-title">
         <div>
           <h2>AI Settings</h2>
           <p className="microcopy">Tune candidate selection before the graph is regenerated.</p>
         </div>
         <span className="pill">{settings.modelProvider}</span>
+      </div>
+      <div className="settings-summary" aria-label="Current AI analysis settings">
+        <span>{settings.analysisMode}</span>
+        <span>{settings.analysisFocus}</span>
+        <span>{settings.graphGranularity}</span>
       </div>
       <form className="form" onSubmit={onSubmit}>
         <div className="form-pair">
@@ -244,28 +265,56 @@ function RelationDetailPanel({
   relation: IdeaRelation;
 }) {
   const [reviewNote, setReviewNote] = useState(relation.reviewNote);
+  const sourceIdea = ideaById.get(relation.sourceIdeaId);
+  const targetIdea = ideaById.get(relation.targetIdeaId);
+  const confidencePercent = Math.min(100, Math.max(0, Math.round(relation.confidence * 100)));
 
   return (
-    <div className="card detail-card">
+    <div className="card detail-card review-card">
       <div className="card-title">
         <div>
-          <h2>Relation Detail</h2>
-          <p className="microcopy">
-            {ideaById.get(relation.sourceIdeaId)?.title ?? "Source"} {"->"}{" "}
-            {ideaById.get(relation.targetIdeaId)?.title ?? "Target"}
-          </p>
+          <h2>Review Relation</h2>
+          <p className="microcopy">Decide whether this connection belongs in long-term research memory.</p>
         </div>
-        <span className="pill">{relation.status}</span>
+        <span className="pill" data-status={relation.status.toLowerCase()}>
+          {relation.status}
+        </span>
       </div>
-      <div className="metadata-grid">
+      <div className="relation-ideas">
+        <div className="relation-idea-card">
+          <span>Source idea</span>
+          <strong>{sourceIdea?.title ?? "Source"}</strong>
+          {sourceIdea?.summary && <p>{sourceIdea.summary}</p>}
+        </div>
+        <div className="relation-connector" aria-hidden="true">
+          {"->"}
+        </div>
+        <div className="relation-idea-card">
+          <span>Target idea</span>
+          <strong>{targetIdea?.title ?? "Target"}</strong>
+          {targetIdea?.summary && <p>{targetIdea.summary}</p>}
+        </div>
+      </div>
+      <div className="review-confidence">
+        <div>
+          <span>Confidence</span>
+          <strong>{confidencePercent}%</strong>
+        </div>
+        <div className="confidence-meter" aria-label={`Confidence ${confidencePercent}%`}>
+          <span style={{ width: `${confidencePercent}%` }} />
+        </div>
+      </div>
+      <div className="metadata-grid compact-metadata">
         <Metric label="Type" value={relation.relationType} />
-        <Metric label="Confidence" value={`${Math.round(relation.confidence * 100)}%`} />
         <Metric label="Model" value={relation.modelName} />
       </div>
-      <p>{relation.rationale}</p>
-      <div className="list">
+      <div className="rationale-block">
+        <span>Rationale</span>
+        <p>{relation.rationale}</p>
+      </div>
+      <div className="evidence-list" aria-label="Relation evidence">
         {relation.evidence.map((item) => (
-          <p className="row" key={item}>
+          <p className="evidence-item" key={item}>
             {item}
           </p>
         ))}
@@ -278,8 +327,8 @@ function RelationDetailPanel({
           value={reviewNote}
         />
       </label>
-      <div className="row-actions">
-        <button className="secondary-button compact-button" disabled={disabled} onClick={() => onUpdateStatus(relation.id, "Accepted", reviewNote)} type="button">
+      <div className="review-actions">
+        <button className="button compact-button" disabled={disabled} onClick={() => onUpdateStatus(relation.id, "Accepted", reviewNote)} type="button">
           Accept
         </button>
         <button className="secondary-button compact-button" disabled={disabled} onClick={() => onUpdateStatus(relation.id, "Hidden", reviewNote)} type="button">
@@ -292,6 +341,23 @@ function RelationDetailPanel({
           Delete
         </button>
       </div>
+    </div>
+  );
+}
+
+function ReviewStatusItem({
+  label,
+  tone,
+  value
+}: {
+  label: IdeaRelationStatus;
+  tone: "suggested" | "accepted" | "hidden" | "rejected";
+  value: number;
+}) {
+  return (
+    <div className="review-progress-item" data-tone={tone}>
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   );
 }

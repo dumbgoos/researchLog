@@ -927,7 +927,7 @@ export default function Home() {
 
         {activeSection === "map" && (
           <section className="grid workbench-grid">
-            <div className="card">
+            <div className="card map-workspace-card">
               <div className="card-title">
                 <div>
                   <h2>Research Map</h2>
