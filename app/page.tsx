@@ -88,6 +88,53 @@ export default function Home() {
     return () => window.clearTimeout(timer);
   }, [notice]);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        if (selectedRelationId) {
+          setSelectedRelationId(null);
+          return;
+        }
+
+        if (selectedVaultAssetId) {
+          setSelectedVaultAssetId(null);
+          setRevealedSecret(null);
+          return;
+        }
+
+        if (selectedDecisionId) {
+          setSelectedDecisionId(null);
+          return;
+        }
+
+        if (selectedExperimentId) {
+          setSelectedExperimentId(null);
+          return;
+        }
+
+        if (selectedIdeaId) {
+          setSelectedIdeaId(null);
+        }
+      }
+
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        const activeElement = document.activeElement;
+
+        if (activeElement instanceof HTMLElement) {
+          const form = activeElement.closest("form");
+
+          if (form instanceof HTMLFormElement) {
+            event.preventDefault();
+            form.requestSubmit();
+          }
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedDecisionId, selectedExperimentId, selectedIdeaId, selectedRelationId, selectedVaultAssetId]);
+
   const filteredIdeas = useMemo(() => {
     const query = ideaQuery.trim().toLowerCase();
 
