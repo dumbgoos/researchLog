@@ -116,4 +116,130 @@ describe("repository smoke tests", () => {
     const deletedRelation = await prisma.ideaRelation.findUnique({ where: { id: relation.id } });
     expect(deletedRelation).toBeNull();
   });
+
+  test("creates and updates workspace records through API routes", async () => {
+    const { POST: createIdeaRoute } = await import("../app/api/ideas/route");
+    const { PATCH: updateIdeaRoute } = await import("../app/api/ideas/[id]/route");
+    const { POST: createExperimentRoute } = await import("../app/api/experiments/route");
+    const { PATCH: updateExperimentRoute } = await import("../app/api/experiments/[id]/route");
+    const { POST: createDecisionRoute } = await import("../app/api/decisions/route");
+    const { PATCH: updateDecisionRoute } = await import("../app/api/decisions/[id]/route");
+    const { POST: createVaultRoute } = await import("../app/api/vault/route");
+    const { PATCH: updateVaultRoute } = await import("../app/api/vault/[id]/route");
+    const { POST: accessSecretRoute } = await import("../app/api/vault/[id]/secret/route");
+
+    const ideaResponse = await createIdeaRoute(
+      jsonRequest({
+        status: "Inbox",
+        summary: "API route idea summary",
+        tags: ["api", "quality"],
+        title: "API route idea"
+      })
+    );
+    const idea = await ideaResponse.json();
+
+    expect(ideaResponse.status).toBe(201);
+    expect(idea.title).toBe("API route idea");
+
+    const updatedIdeaResponse = await updateIdeaRoute(
+      jsonRequest({ priority: "High", status: "Exploring" }),
+      { params: Promise.resolve({ id: idea.id }) }
+    );
+    const updatedIdea = await updatedIdeaResponse.json();
+
+    expect(updatedIdeaResponse.status).toBe(200);
+    expect(updatedIdea.status).toBe("Exploring");
+    expect(updatedIdea.priority).toBe("High");
+
+    const vaultResponse = await createVaultRoute(
+      jsonRequest({
+        assetType: "Token",
+        metadata: { usage_scope: "api test" },
+        name: "API route token",
+        provider: "OpenAI",
+        secret: "sk-api-route-secret"
+      })
+    );
+    const vaultAsset = await vaultResponse.json();
+
+    expect(vaultResponse.status).toBe(201);
+    expect(vaultAsset.maskedPreview).toBe("sk-a****cret");
+
+    const updatedVaultResponse = await updateVaultRoute(
+      jsonRequest({ status: "Archived" }),
+      { params: Promise.resolve({ id: vaultAsset.id }) }
+    );
+    const updatedVaultAsset = await updatedVaultResponse.json();
+
+    expect(updatedVaultResponse.status).toBe(200);
+    expect(updatedVaultAsset.status).toBe("Archived");
+
+    const secretResponse = await accessSecretRoute(
+      jsonRequest({
+        actionType: "reveal",
+        vaultPassword: "repository-test-password"
+      }),
+      { params: Promise.resolve({ id: vaultAsset.id }) }
+    );
+    const secret = await secretResponse.json();
+
+    expect(secretResponse.status).toBe(200);
+    expect(secret.secret).toBe("sk-api-route-secret");
+
+    const experimentResponse = await createExperimentRoute(
+      jsonRequest({
+        configJson: "{\"lr\":0.001}",
+        datasetName: "API dataset",
+        ideaId: idea.id,
+        linkedAssetIds: [vaultAsset.id],
+        resultMetricsJson: "{\"acc\":0.9}",
+        status: "Planned",
+        title: "API route experiment"
+      })
+    );
+    const experiment = await experimentResponse.json();
+
+    expect(experimentResponse.status).toBe(201);
+    expect(experiment.title).toBe("API route experiment");
+
+    const updatedExperimentResponse = await updateExperimentRoute(
+      jsonRequest({ status: "Running" }),
+      { params: Promise.resolve({ id: experiment.id }) }
+    );
+    const updatedExperiment = await updatedExperimentResponse.json();
+
+    expect(updatedExperimentResponse.status).toBe(200);
+    expect(updatedExperiment.status).toBe("Running");
+
+    const decisionResponse = await createDecisionRoute(
+      jsonRequest({
+        content: "Continue this line after API verification.",
+        decisionType: "continue",
+        experimentId: experiment.id,
+        ideaId: idea.id,
+        title: "API route decision"
+      })
+    );
+    const decision = await decisionResponse.json();
+
+    expect(decisionResponse.status).toBe(201);
+    expect(decision.experimentId).toBe(experiment.id);
+
+    const updatedDecisionResponse = await updateDecisionRoute(
+      jsonRequest({ decisionType: "pause" }),
+      { params: Promise.resolve({ id: decision.id }) }
+    );
+    const updatedDecision = await updatedDecisionResponse.json();
+
+    expect(updatedDecisionResponse.status).toBe(200);
+    expect(updatedDecision.decisionType).toBe("pause");
+  });
 });
+
+function jsonRequest(body: unknown) {
+  return new Request("http://localhost/api-test", {
+    body: JSON.stringify(body),
+    headers: { "content-type": "application/json" },
+    method: "POST"
+  }) as never;
+}
