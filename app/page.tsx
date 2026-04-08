@@ -5,7 +5,6 @@ import {
   CreateDecisionPanel,
   CreateExperimentPanel,
   CreateIdeaPanel,
-  CreateVaultAssetPanel,
   DecisionDetailPanel,
   DecisionList,
   ExperimentComparisonPanel,
@@ -13,17 +12,12 @@ import {
   ExperimentList,
   IdeaDetailPanel,
   IdeaList,
-  RelationDetailPanel,
-  ResearchMapCanvas,
-  AISettingsPanel,
-  ResearchMapSummary,
   StatCard,
   TimelineList,
-  VaultAssetDetailPanel,
-  VaultAssetList,
-  VaultAuditList,
 } from "@/components/workspace-ui";
 import { ActiveThreadsPanel, StaleExperimentsPanel, TodayPanel } from "@/components/dashboard-panels";
+import { AISettingsPanel, RelationDetailPanel, ResearchMapCanvas, ResearchMapSummary } from "@/components/research-map-ui";
+import { CreateVaultAssetPanel, VaultAssetDetailPanel, VaultAssetList, VaultAuditList } from "@/components/vault-ui";
 import { decisionTypes, experimentStatuses, ideaStatuses, sections } from "@/lib/constants";
 import type { Section } from "@/lib/constants";
 import { parseMetadataLines } from "@/lib/form-utils";
