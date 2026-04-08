@@ -100,7 +100,7 @@ function VaultAssetList({
           </div>
           <div className="list">
             {group.map((asset) => (
-              <article className={`row ${selectedAssetId === asset.id ? "selected-row" : ""}`} key={asset.id}>
+              <article className={`row ${selectedAssetId === asset.id ? "selected-row" : ""}`} data-kind="vault" key={asset.id}>
                 <div className="row-heading">
                   <h3>{asset.name}</h3>
                   <span className="pill">{asset.status}</span>

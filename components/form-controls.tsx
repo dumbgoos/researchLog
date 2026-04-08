@@ -111,6 +111,15 @@ function CheckboxGroup({
   );
 }
 
+function EditorSection({ children, title }: { children: React.ReactNode; title: string }) {
+  return (
+    <section className="editor-section">
+      <div className="editor-section-title">{title}</div>
+      {children}
+    </section>
+  );
+}
+
 
 function MarkdownPreview({ title, value }: { title: string; value: string }) {
   const blocks = value
@@ -148,4 +157,4 @@ function MarkdownPreview({ title, value }: { title: string; value: string }) {
   );
 }
 
-export { CheckboxGroup, Field, MarkdownPreview };
+export { CheckboxGroup, EditorSection, Field, MarkdownPreview };

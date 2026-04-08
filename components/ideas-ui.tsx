@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { ideaStatuses } from "@/lib/constants";
 import type { Idea, IdeaStatus } from "@/lib/types";
-import { Field } from "@/components/form-controls";
+import { EditorSection, Field } from "@/components/form-controls";
 
 function CreateIdeaPanel({ disabled, onSubmit }: { disabled: boolean; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
   return (
@@ -59,38 +59,44 @@ function IdeaDetailPanel({
           Close
         </button>
       </div>
-      <form className="form" key={idea.id} onSubmit={(event) => onSubmit(event, idea.id)}>
-        <Field defaultValue={idea.title} name="title" label="Title" placeholder="Idea title" required />
-        <Field defaultValue={idea.summary} name="summary" label="Summary" placeholder="Short research summary" textarea required />
-        <Field defaultValue={idea.motivation} name="motivation" label="Motivation" placeholder="Why this matters" textarea />
-        <Field defaultValue={idea.hypothesis} name="hypothesis" label="Hypothesis" placeholder="Research hypothesis" textarea />
-        <Field defaultValue={idea.novelty} name="novelty" label="Novelty" placeholder="Novelty points" textarea />
-        <div className="form-pair">
-          <label className="field">
-            <span>Status</span>
-            <select name="status" defaultValue={idea.status}>
-              {ideaStatuses.map((status) => (
-                <option key={status}>{status}</option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            <span>Priority</span>
-            <select name="priority" defaultValue={idea.priority}>
-              {["Low", "Medium", "High"].map((priority) => (
-                <option key={priority}>{priority}</option>
-              ))}
-            </select>
-          </label>
-        </div>
-        <Field defaultValue={idea.tags.join(", ")} name="tags" label="Tags" placeholder="llm, graph, reproducibility" />
-        <Field
-          defaultValue={idea.relatedPapers.join("\n")}
-          name="relatedPapers"
-          label="Related papers"
-          placeholder="One paper or URL per line"
-          textarea
-        />
+      <form className="form editor-form" key={idea.id} onSubmit={(event) => onSubmit(event, idea.id)}>
+        <EditorSection title="Context">
+          <Field defaultValue={idea.title} name="title" label="Title" placeholder="Idea title" required />
+          <Field defaultValue={idea.summary} name="summary" label="Summary" placeholder="Short research summary" textarea required />
+          <Field defaultValue={idea.motivation} name="motivation" label="Motivation" placeholder="Why this matters" textarea />
+        </EditorSection>
+        <EditorSection title="Research claim">
+          <Field defaultValue={idea.hypothesis} name="hypothesis" label="Hypothesis" placeholder="Research hypothesis" textarea />
+          <Field defaultValue={idea.novelty} name="novelty" label="Novelty" placeholder="Novelty points" textarea />
+        </EditorSection>
+        <EditorSection title="Organization">
+          <div className="form-pair">
+            <label className="field">
+              <span>Status</span>
+              <select name="status" defaultValue={idea.status}>
+                {ideaStatuses.map((status) => (
+                  <option key={status}>{status}</option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              <span>Priority</span>
+              <select name="priority" defaultValue={idea.priority}>
+                {["Low", "Medium", "High"].map((priority) => (
+                  <option key={priority}>{priority}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <Field defaultValue={idea.tags.join(", ")} name="tags" label="Tags" placeholder="llm, graph, reproducibility" />
+          <Field
+            defaultValue={idea.relatedPapers.join("\n")}
+            name="relatedPapers"
+            label="Related papers"
+            placeholder="One paper or URL per line"
+            textarea
+          />
+        </EditorSection>
         <div className="form-actions">
           <button className="button" disabled={disabled} type="submit">
             {disabled ? "Updating..." : "Update idea"}
@@ -123,7 +129,7 @@ function IdeaList({
     <div className="list">
       {ideas.length === 0 && <p className="empty-state">No ideas match this view.</p>}
       {ideas.map((idea) => (
-        <article className={`row ${selectedIdeaId === idea.id ? "selected-row" : ""}`} key={idea.id}>
+        <article className={`row ${selectedIdeaId === idea.id ? "selected-row" : ""}`} data-kind="idea" key={idea.id}>
           <div className="row-heading">
             <h3>{idea.title}</h3>
             <span className="pill">{idea.status}</span>
