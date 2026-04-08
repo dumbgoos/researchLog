@@ -1,26 +1,94 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent, type PointerEvent } from "react";
 import type { AIAnalysisSettings, Idea, IdeaRelation, IdeaRelationStatus, ResearchMapSnapshot } from "@/lib/types";
 import { ConfirmDeleteButton, EmptyState } from "@/components/form-controls";
 
 function ResearchMapCanvas({
   ideas,
   relations,
+  selectedIdeaId,
   selectedRelationId,
   viewMode,
+  onSelectIdea,
   onSelectRelation
 }: {
   ideas: Idea[];
   relations: IdeaRelation[];
+  selectedIdeaId: string | null;
   selectedRelationId: string | null;
   viewMode: "Network" | "Evolution" | "Clusters";
+  onSelectIdea: (id: string | null) => void;
   onSelectRelation: (id: string) => void;
 }) {
   const positions = buildGraphPositions(ideas, relations, viewMode);
+  const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 1 });
+  const [dragStart, setDragStart] = useState<{ pointerId: number; x: number; y: number; originX: number; originY: number } | null>(null);
+  const selectedIdeaRelationIds = useMemo(() => {
+    if (!selectedIdeaId) {
+      return new Set<string>();
+    }
+
+    return new Set(
+      relations
+        .filter((relation) => relation.sourceIdeaId === selectedIdeaId || relation.targetIdeaId === selectedIdeaId)
+        .map((relation) => relation.id)
+    );
+  }, [relations, selectedIdeaId]);
+  const zoomLabel = `${Math.round(viewport.zoom * 100)}%`;
+
+  const updateZoom = (nextZoom: number) => {
+    setViewport((current) => ({ ...current, zoom: Math.min(1.8, Math.max(0.7, nextZoom)) }));
+  };
+  const resetViewport = () => {
+    setViewport({ x: 0, y: 0, zoom: 1 });
+    onSelectIdea(null);
+  };
+  const handlePointerDown = (event: PointerEvent<SVGSVGElement>) => {
+    if (event.button !== 0) {
+      return;
+    }
+
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setDragStart({
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      originX: viewport.x,
+      originY: viewport.y
+    });
+  };
+  const handlePointerMove = (event: PointerEvent<SVGSVGElement>) => {
+    if (!dragStart) {
+      return;
+    }
+
+    setViewport((current) => ({
+      ...current,
+      x: dragStart.originX + event.clientX - dragStart.x,
+      y: dragStart.originY + event.clientY - dragStart.y
+    }));
+  };
+  const handlePointerUp = (event: PointerEvent<SVGSVGElement>) => {
+    if (dragStart?.pointerId === event.pointerId) {
+      setDragStart(null);
+    }
+  };
 
   return (
     <div className="graph research-graph" aria-label="Research map">
+      <div className="graph-toolbar" aria-label="Research map controls">
+        <button className="secondary-button compact-button" onClick={() => updateZoom(viewport.zoom - 0.1)} type="button">
+          Zoom out
+        </button>
+        <span className="tag">{zoomLabel}</span>
+        <button className="secondary-button compact-button" onClick={() => updateZoom(viewport.zoom + 0.1)} type="button">
+          Zoom in
+        </button>
+        <button className="secondary-button compact-button" onClick={resetViewport} type="button">
+          Reset
+        </button>
+      </div>
       {ideas.length === 0 && (
         <EmptyState
           description="Create a few ideas first. Research Map needs idea profiles before it can explain relationships."
@@ -36,50 +104,109 @@ function ResearchMapCanvas({
         />
       )}
       {ideas.length > 0 && relations.length > 0 && (
-        <svg role="img" viewBox="0 0 720 420">
-          {relations.map((relation) => {
-            const source = positions.get(relation.sourceIdeaId);
-            const target = positions.get(relation.targetIdeaId);
+        <svg
+          className={dragStart ? "is-panning" : ""}
+          onPointerDown={handlePointerDown}
+          onPointerLeave={handlePointerUp}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          role="img"
+          viewBox="0 0 720 420"
+        >
+          <g transform={`translate(${viewport.x} ${viewport.y}) scale(${viewport.zoom})`}>
+            {relations.map((relation) => {
+              const source = positions.get(relation.sourceIdeaId);
+              const target = positions.get(relation.targetIdeaId);
 
-            if (!source || !target) {
-              return null;
-            }
+              if (!source || !target) {
+                return null;
+              }
 
-            return (
-              <g key={relation.id}>
-                <line
-                  className={selectedRelationId === relation.id ? "graph-edge selected-edge" : "graph-edge"}
-                  onClick={() => onSelectRelation(relation.id)}
-                  strokeWidth={Math.max(2, relation.confidence * 5)}
-                  x1={source.x}
-                  x2={target.x}
-                  y1={source.y}
-                  y2={target.y}
+              return (
+                <g key={relation.id}>
+                  <line
+                    className={
+                      selectedRelationId === relation.id || selectedIdeaRelationIds.has(relation.id)
+                        ? "graph-edge selected-edge"
+                        : "graph-edge"
+                    }
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onSelectRelation(relation.id);
+                    }}
+                    strokeWidth={Math.max(2, relation.confidence * 5)}
+                    x1={source.x}
+                    x2={target.x}
+                    y1={source.y}
+                    y2={target.y}
+                  />
+                  <text
+                    className="graph-edge-label"
+                    x={(source.x + target.x) / 2}
+                    y={(source.y + target.y) / 2 - 8}
+                  >
+                    {relation.relationType}
+                  </text>
+                </g>
+              );
+            })}
+            {ideas.map((idea) => {
+              const position = positions.get(idea.id) ?? { x: 360, y: 210 };
+              return (
+                <GraphNode
+                  isSelected={selectedIdeaId === idea.id}
+                  key={idea.id}
+                  onSelect={() => onSelectIdea(selectedIdeaId === idea.id ? null : idea.id)}
+                  x={position.x}
+                  y={position.y}
+                  label={idea.title.slice(0, 18)}
+                  tone={viewMode === "Clusters" ? idea.tags[0] : undefined}
                 />
-                <text
-                  className="graph-edge-label"
-                  x={(source.x + target.x) / 2}
-                  y={(source.y + target.y) / 2 - 8}
-                >
-                  {relation.relationType}
-                </text>
-              </g>
-            );
-          })}
-          {ideas.map((idea) => {
-            const position = positions.get(idea.id) ?? { x: 360, y: 210 };
-            return (
-              <GraphNode
-                key={idea.id}
-                x={position.x}
-                y={position.y}
-                label={idea.title.slice(0, 18)}
-                tone={viewMode === "Clusters" ? idea.tags[0] : undefined}
-              />
-            );
-          })}
+              );
+            })}
+          </g>
         </svg>
       )}
+    </div>
+  );
+}
+
+function ResearchMapRelationTable({
+  ideaById,
+  onSelectRelation,
+  relations,
+  selectedRelationId
+}: {
+  ideaById: Map<string, Idea>;
+  onSelectRelation: (id: string) => void;
+  relations: IdeaRelation[];
+  selectedRelationId: string | null;
+}) {
+  return (
+    <div className="relation-table" aria-label="Research map relation table">
+      <div className="relation-table-head">
+        <span>Relation</span>
+        <span>Confidence</span>
+        <span>Status</span>
+      </div>
+      {relations.length === 0 && (
+        <div className="relation-table-empty">No visible relation rows.</div>
+      )}
+      {relations.slice(0, 12).map((relation) => (
+        <button
+          className={selectedRelationId === relation.id ? "relation-table-row active" : "relation-table-row"}
+          key={relation.id}
+          onClick={() => onSelectRelation(relation.id)}
+          type="button"
+        >
+          <span>
+            <strong>{ideaById.get(relation.sourceIdeaId)?.title ?? "Source"}</strong>
+            <small>{relation.relationType} {"->"} {ideaById.get(relation.targetIdeaId)?.title ?? "Target"}</small>
+          </span>
+          <span>{Math.round(relation.confidence * 100)}%</span>
+          <span>{relation.status}</span>
+        </button>
+      ))}
     </div>
   );
 }
@@ -429,11 +556,28 @@ function NumberField({
   );
 }
 
-function GraphNode({ x, y, label, tone }: { x: number; y: number; label: string; tone?: string }) {
+function GraphNode({
+  isSelected,
+  label,
+  onSelect,
+  tone,
+  x,
+  y
+}: {
+  isSelected?: boolean;
+  label: string;
+  onSelect: () => void;
+  tone?: string;
+  x: number;
+  y: number;
+}) {
   const fill = tone ? clusterColor(tone) : "#0f6b6e";
 
   return (
-    <g>
+    <g className={isSelected ? "graph-node selected-node" : "graph-node"} onClick={(event) => {
+      event.stopPropagation();
+      onSelect();
+    }}>
       <circle cx={x} cy={y} r="46" fill={fill} />
       <text fill="white" fontSize="15" fontWeight="700" textAnchor="middle" x={x} y={y + 5}>
         {label}
@@ -505,4 +649,4 @@ function clusterColor(value: string): string {
   return palette[hash % palette.length];
 }
 
-export { AISettingsPanel, RelationDetailPanel, ResearchMapCanvas, ResearchMapSummary };
+export { AISettingsPanel, RelationDetailPanel, ResearchMapCanvas, ResearchMapRelationTable, ResearchMapSummary };
