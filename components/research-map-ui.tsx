@@ -223,7 +223,7 @@ function AISettingsPanel({
           />
         </div>
         <button className="button" disabled={disabled} type="submit">
-          Save settings
+          {disabled ? "Saving..." : "Save settings"}
         </button>
       </form>
     </div>

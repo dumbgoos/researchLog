@@ -29,7 +29,7 @@ function CreateIdeaPanel({ disabled, onSubmit }: { disabled: boolean; onSubmit: 
         <Field name="relatedPapers" label="Related papers" placeholder="One paper or URL per line" textarea />
         <div className="form-actions">
           <button className="button" disabled={disabled} type="submit">
-            Save idea
+            {disabled ? "Saving..." : "Save idea"}
           </button>
         </div>
       </form>
@@ -93,7 +93,7 @@ function IdeaDetailPanel({
         />
         <div className="form-actions">
           <button className="button" disabled={disabled} type="submit">
-            Update idea
+            {disabled ? "Updating..." : "Update idea"}
           </button>
         </div>
       </form>

@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { CreateDecisionPanel, DecisionDetailPanel, DecisionList } from "@/components/decisions-ui";
 import { ActiveThreadsPanel, StaleExperimentsPanel, TodayPanel } from "@/components/dashboard-panels";
 import {
@@ -78,6 +78,15 @@ export default function Home() {
   const comparedExperiments = comparedExperimentIds
     .map((id) => experiments.find((experiment) => experiment.id === id))
     .filter((experiment): experiment is Experiment => Boolean(experiment));
+
+  useEffect(() => {
+    if (!notice) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => setNotice(null), 4200);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
 
   const filteredIdeas = useMemo(() => {
     const query = ideaQuery.trim().toLowerCase();
@@ -623,25 +632,29 @@ export default function Home() {
             </p>
           </div>
           <div className="toolbar">
-            <button className="button" onClick={() => setActiveSection("ideas")} type="button">
+            <div className="header-kpis" aria-label="Workspace snapshot">
+              <span>{activeIdeas.length} active ideas</span>
+              <span>{runningExperiments.length} running</span>
+            </div>
+            <button className="button" disabled={isSaving} onClick={() => setActiveSection("ideas")} type="button">
               New idea
             </button>
-            <button className="secondary-button" onClick={() => setActiveSection("experiments")} type="button">
+            <button className="secondary-button" disabled={isSaving} onClick={() => setActiveSection("experiments")} type="button">
               New experiment
             </button>
           </div>
         </header>
 
-        {error && <div className="notice error-notice">{error}</div>}
+        {error && <div className="notice error-notice" role="alert">{error}</div>}
         {notice && (
-          <div className="notice">
+          <div className="notice" role="status" aria-live="polite">
             {notice}
             <button className="link-button" onClick={() => setNotice(null)} type="button">
               Dismiss
             </button>
           </div>
         )}
-        {isLoading && <div className="notice">Loading workspace data...</div>}
+        {isLoading && <div className="notice loading-notice" role="status">Loading workspace data...</div>}
 
         {activeSection === "dashboard" && (
           <>

@@ -67,7 +67,7 @@ function CreateVaultAssetPanel({
         </p>
         <div className="form-actions">
           <button className="button" disabled={disabled} type="submit">
-            Save asset
+            {disabled ? "Saving..." : "Save asset"}
           </button>
         </div>
       </form>
@@ -226,7 +226,7 @@ function VaultAssetDetailPanel({
             </>
           )}
           <button className="button" disabled={disabled} type="submit">
-            Update asset
+            {disabled ? "Updating..." : "Update asset"}
           </button>
           <button className="danger-button" disabled={disabled} onClick={() => onDeleteAsset(asset.id)} type="button">
             Delete

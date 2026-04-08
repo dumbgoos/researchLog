@@ -69,7 +69,7 @@ function CreateExperimentPanel({
         <Field name="nextSteps" label="Next steps (Markdown)" placeholder="What should happen next?" markdown textarea />
         <div className="form-actions">
           <button className="button" disabled={disabled} type="submit">
-            Save experiment
+            {disabled ? "Saving..." : "Save experiment"}
           </button>
         </div>
       </form>
@@ -173,7 +173,7 @@ function ExperimentDetailPanel({
         <Field defaultValue={experiment.nextSteps} name="nextSteps" label="Next steps (Markdown)" placeholder="What should happen next?" markdown textarea />
         <div className="form-actions">
           <button className="button" disabled={disabled} type="submit">
-            Update experiment
+            {disabled ? "Updating..." : "Update experiment"}
           </button>
         </div>
       </form>
