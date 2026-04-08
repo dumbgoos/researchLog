@@ -55,7 +55,7 @@ function CreateDecisionPanel({
         <Field name="content" label="Reasoning (Markdown)" placeholder="Why are we making this move?" markdown textarea required />
         <div className="form-actions">
           <button className="button" disabled={disabled} type="submit">
-            Save decision
+            {disabled ? "Saving..." : "Save decision"}
           </button>
         </div>
       </form>
@@ -113,7 +113,7 @@ function DecisionDetailPanel({
         <Field defaultValue={decision.content} name="content" label="Reasoning (Markdown)" placeholder="Why this decision?" markdown textarea required />
         <div className="form-actions">
           <button className="button" disabled={disabled} type="submit">
-            Update decision
+            {disabled ? "Updating..." : "Update decision"}
           </button>
         </div>
       </form>
