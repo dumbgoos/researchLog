@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { experimentStatuses } from "@/lib/constants";
 import type { Experiment, ExperimentStatus, Idea, VaultAsset } from "@/lib/types";
-import { CheckboxGroup, EditorSection, EmptyState, Field, MarkdownPreview } from "@/components/form-controls";
+import { CheckboxGroup, EditorSection, EmptyState, Field, MarkdownPreview, TextExcerpt } from "@/components/form-controls";
 
 function CreateExperimentPanel({
   disabled,
@@ -285,8 +285,8 @@ function ExperimentList({
             <h3>{experiment.title}</h3>
             <span className="pill">{experiment.status}</span>
           </div>
-          <p className="muted">{ideaById.get(experiment.ideaId) ?? "Unlinked idea"}</p>
-          <p>{experiment.objective}</p>
+          <p className="muted row-kicker">{ideaById.get(experiment.ideaId) ?? "Unlinked idea"}</p>
+          <TextExcerpt text={experiment.objective} />
           <div className="tag-row">
             <span className="tag">{experiment.experimentType}</span>
             <span className="tag">{experiment.datasetName}</span>
