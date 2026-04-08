@@ -118,6 +118,34 @@ function CheckboxGroup({
   );
 }
 
+function EmptyState({
+  actionLabel,
+  description,
+  onAction,
+  title,
+  tone = "neutral"
+}: {
+  actionLabel?: string;
+  description: string;
+  onAction?: () => void;
+  title: string;
+  tone?: "neutral" | "idea" | "experiment" | "decision" | "vault" | "map";
+}) {
+  return (
+    <div className="empty-state empty-state-panel" data-tone={tone}>
+      <div>
+        <strong>{title}</strong>
+        <p>{description}</p>
+      </div>
+      {actionLabel && onAction && (
+        <button className="secondary-button compact-button" onClick={onAction} type="button">
+          {actionLabel}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function EditorSection({ children, description, title }: { children: React.ReactNode; description?: string; title: string }) {
   return (
     <section className="editor-section">
@@ -167,4 +195,4 @@ function MarkdownPreview({ title, value }: { title: string; value: string }) {
   );
 }
 
-export { CheckboxGroup, EditorSection, Field, MarkdownPreview };
+export { CheckboxGroup, EditorSection, EmptyState, Field, MarkdownPreview };

@@ -4,6 +4,7 @@ import type { FormEvent } from "react";
 import { vaultAssetTypes } from "@/lib/constants";
 import { formatMetadataLines } from "@/lib/form-utils";
 import type { VaultAsset, VaultAuditLog } from "@/lib/types";
+import { EmptyState } from "@/components/form-controls";
 
 function Field({
   name,
@@ -91,7 +92,13 @@ function VaultAssetList({
 
   return (
     <div className="vault-sections">
-      {assets.length === 0 && <p className="empty-state">No vault assets yet.</p>}
+      {assets.length === 0 && (
+        <EmptyState
+          description="Add a token, platform, server alias, or reusable template. Secrets stay encrypted and only appear as masked previews."
+          title="No vault assets yet"
+          tone="vault"
+        />
+      )}
       {groupedAssets.map(({ assetType, assets: group }) => (
         <section className="vault-section" key={assetType}>
           <div className="section-heading">
@@ -139,7 +146,13 @@ function VaultAuditList({ audits, assets }: { audits: VaultAuditLog[]; assets: V
 
   return (
     <div className="timeline">
-      {audits.length === 0 && <p className="empty-state">No vault audit events yet.</p>}
+      {audits.length === 0 && (
+        <EmptyState
+          description="Reveal, copy, rotate, and delete actions will appear here so sensitive asset usage stays traceable."
+          title="No audit events yet"
+          tone="vault"
+        />
+      )}
       {audits.map((audit) => (
         <article className="timeline-item" key={audit.id}>
           <span className="timeline-dot" aria-hidden="true" />

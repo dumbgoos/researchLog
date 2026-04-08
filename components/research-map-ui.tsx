@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import type { AIAnalysisSettings, Idea, IdeaRelation, IdeaRelationStatus, ResearchMapSnapshot } from "@/lib/types";
+import { EmptyState } from "@/components/form-controls";
 
 function ResearchMapCanvas({
   ideas,
@@ -20,8 +21,21 @@ function ResearchMapCanvas({
 
   return (
     <div className="graph research-graph" aria-label="Research map">
-      {ideas.length === 0 && <p className="empty-state">Create ideas before generating a research map.</p>}
-      {ideas.length > 0 && (
+      {ideas.length === 0 && (
+        <EmptyState
+          description="Create a few ideas first. Research Map needs idea profiles before it can explain relationships."
+          title="No ideas to map"
+          tone="map"
+        />
+      )}
+      {ideas.length > 0 && relations.length === 0 && (
+        <EmptyState
+          description="Try regenerating the map, lowering the confidence filter, or accepting that the current ideas are still independent."
+          title="No visible relations"
+          tone="map"
+        />
+      )}
+      {ideas.length > 0 && relations.length > 0 && (
         <svg role="img" viewBox="0 0 720 420">
           {relations.map((relation) => {
             const source = positions.get(relation.sourceIdeaId);
