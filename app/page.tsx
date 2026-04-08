@@ -6,6 +6,7 @@ import {
   CreateExperimentPanel,
   CreateIdeaPanel,
   CreateVaultAssetPanel,
+  ActiveThreadsPanel,
   DecisionDetailPanel,
   DecisionList,
   ExperimentComparisonPanel,
@@ -18,7 +19,9 @@ import {
   AISettingsPanel,
   ResearchMapSummary,
   StatCard,
+  StaleExperimentsPanel,
   TimelineList,
+  TodayPanel,
   VaultAssetDetailPanel,
   VaultAssetList,
   VaultAuditList,
@@ -659,18 +662,48 @@ export default function Home() {
             </section>
 
             <section className="grid workbench-grid">
-              <div className="card">
-                <div className="card-title">
-                  <h2>Active Ideas</h2>
-                  <span className="pill">MVP v1</span>
-                </div>
-                <IdeaList ideas={activeIdeas} experimentCounts={experimentCounts} />
+              <div className="side-stack">
+                <TodayPanel
+                  activeIdeas={activeIdeas}
+                  experiments={experiments}
+                  onOpenExperiment={(id) => {
+                    setSelectedExperimentId(id);
+                    setActiveSection("experiments");
+                  }}
+                />
+                <ActiveThreadsPanel
+                  experimentCounts={experimentCounts}
+                  ideas={activeIdeas}
+                  onOpenIdea={(id) => {
+                    setSelectedIdeaId(id);
+                    setActiveSection("ideas");
+                  }}
+                />
               </div>
-              <div className="card">
-                <div className="card-title">
-                  <h2>Recent Activity</h2>
+              <div className="side-stack">
+                <StaleExperimentsPanel
+                  experiments={experiments}
+                  onOpenExperiment={(id) => {
+                    setSelectedExperimentId(id);
+                    setActiveSection("experiments");
+                  }}
+                />
+                <div className="card">
+                  <div className="card-title">
+                    <h2>Recent Decisions</h2>
+                    <span className="pill">{decisions.length} logged</span>
+                  </div>
+                  <DecisionList decisions={decisions.slice(0, 4)} ideas={ideas} onOpenDecision={(id) => {
+                    setSelectedDecisionId(id);
+                    setActiveSection("decisions");
+                  }} />
                 </div>
-                <TimelineList timeline={timeline.slice(0, 5)} />
+                <div className="card">
+                  <div className="card-title">
+                    <h2>Recent Activity</h2>
+                  </div>
+                  <TimelineList timeline={timeline.slice(0, 5)} />
+                </div>
               </div>
             </section>
           </>
