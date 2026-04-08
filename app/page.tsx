@@ -1,23 +1,18 @@
 ﻿"use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { CreateDecisionPanel, DecisionDetailPanel, DecisionList } from "@/components/decisions-ui";
+import { ActiveThreadsPanel, StaleExperimentsPanel, TodayPanel } from "@/components/dashboard-panels";
 import {
-  CreateDecisionPanel,
   CreateExperimentPanel,
-  CreateIdeaPanel,
-  DecisionDetailPanel,
-  DecisionList,
   ExperimentComparisonPanel,
   ExperimentDetailPanel,
-  ExperimentList,
-  IdeaDetailPanel,
-  IdeaList,
-  StatCard,
-  TimelineList,
-} from "@/components/workspace-ui";
-import { ActiveThreadsPanel, StaleExperimentsPanel, TodayPanel } from "@/components/dashboard-panels";
+  ExperimentList
+} from "@/components/experiments-ui";
+import { CreateIdeaPanel, IdeaDetailPanel, IdeaList } from "@/components/ideas-ui";
 import { AISettingsPanel, RelationDetailPanel, ResearchMapCanvas, ResearchMapSummary } from "@/components/research-map-ui";
 import { CreateVaultAssetPanel, VaultAssetDetailPanel, VaultAssetList, VaultAuditList } from "@/components/vault-ui";
+import { StatCard, TimelineList } from "@/components/workspace-ui";
 import { decisionTypes, experimentStatuses, ideaStatuses, sections } from "@/lib/constants";
 import type { Section } from "@/lib/constants";
 import { parseMetadataLines } from "@/lib/form-utils";

@@ -37,7 +37,11 @@ Research Map uses the local `rule-engine` provider by default. To test a real Op
 ## Code structure
 
 - `app/page.tsx` owns page state, data mutations, and section composition.
-- `components/workspace-ui.tsx` contains reusable client UI components for Ideas, Experiments, Decisions, Vault, Timeline, and Research Map.
+- `components/workspace-ui.tsx` contains only small shared workspace pieces such as summary cards and timeline rendering.
+- `components/ideas-ui.tsx`, `components/experiments-ui.tsx`, and `components/decisions-ui.tsx` own the core research record panels and lists.
+- `components/vault-ui.tsx` owns Vault panels, asset lists, and audit rendering.
+- `components/research-map-ui.tsx` owns graph rendering, relation review, and AI settings UI.
+- `components/form-controls.tsx` contains shared form inputs and lightweight Markdown helpers.
 - `lib/use-workspace.ts` loads and refreshes the workspace snapshot.
 - `lib/constants.ts` keeps shared statuses and navigation definitions.
 - `lib/form-utils.ts` contains small form parsing helpers.
