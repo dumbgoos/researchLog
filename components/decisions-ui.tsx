@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { decisionTypes } from "@/lib/constants";
 import type { DecisionLog, Experiment, Idea } from "@/lib/types";
-import { EditorSection, EmptyState, Field, MarkdownPreview } from "@/components/form-controls";
+import { EditorSection, EmptyState, Field, MarkdownPreview, TextExcerpt } from "@/components/form-controls";
 
 function CreateDecisionPanel({
   disabled,
@@ -165,8 +165,8 @@ function DecisionList({
             <h3>{decision.title}</h3>
             <span className="pill">{decision.decisionType}</span>
           </div>
-          <p className="muted">{ideaById.get(decision.ideaId) ?? "Unlinked idea"}</p>
-          <p>{decision.content}</p>
+          <p className="muted row-kicker">{ideaById.get(decision.ideaId) ?? "Unlinked idea"}</p>
+          <TextExcerpt text={decision.content} />
           <div className="tag-row">
             <span className="tag">{decision.createdAt}</span>
           </div>

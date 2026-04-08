@@ -1,6 +1,7 @@
 "use client";
 
 import type { TimelineEvent } from "@/lib/types";
+import { EmptyState, TextExcerpt } from "@/components/form-controls";
 function StatCard({
   detail,
   label,
@@ -24,15 +25,21 @@ function StatCard({
 function TimelineList({ timeline }: { timeline: TimelineEvent[] }) {
   return (
     <div className="timeline">
+      {timeline.length === 0 && (
+        <EmptyState
+          description="Create or update ideas, experiments, decisions, Vault assets, or graph relations. ResearchLog will build the timeline as you work."
+          title="No activity yet"
+        />
+      )}
       {timeline.map((event) => (
         <article className="timeline-item" key={event.id}>
           <span className="timeline-dot" aria-hidden="true" />
-          <div>
+          <div className="timeline-content">
             <div className="row-heading">
               <h3>{event.label}</h3>
               <span className="tag">{event.createdAt}</span>
             </div>
-            <p className="muted">{event.detail}</p>
+            <TextExcerpt text={event.detail} tone="muted" />
           </div>
         </article>
       ))}

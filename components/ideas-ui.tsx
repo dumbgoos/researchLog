@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { ideaStatuses } from "@/lib/constants";
 import type { Idea, IdeaStatus } from "@/lib/types";
-import { EditorSection, EmptyState, Field } from "@/components/form-controls";
+import { EditorSection, EmptyState, Field, TextExcerpt } from "@/components/form-controls";
 
 function CreateIdeaPanel({ disabled, onSubmit }: { disabled: boolean; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
   return (
@@ -156,8 +156,8 @@ function IdeaList({
             <h3>{idea.title}</h3>
             <span className="pill">{idea.status}</span>
           </div>
-          <p className="muted">{idea.summary}</p>
-          <p>{idea.hypothesis}</p>
+          <TextExcerpt text={idea.summary} tone="muted" />
+          <TextExcerpt text={idea.hypothesis} />
           <div className="tag-row">
             <span className="tag">{experimentCounts[idea.id] ?? 0} experiments</span>
             <span className="tag">{idea.priority} priority</span>

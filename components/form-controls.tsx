@@ -146,6 +146,17 @@ function EmptyState({
   );
 }
 
+function TextExcerpt({ text, tone = "body" }: { text: string; tone?: "body" | "muted" }) {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  const excerpt = normalized.length > 190 ? `${normalized.slice(0, 187)}...` : normalized;
+
+  if (!excerpt) {
+    return null;
+  }
+
+  return <p className={`text-excerpt ${tone === "muted" ? "muted" : ""}`}>{excerpt}</p>;
+}
+
 function EditorSection({ children, description, title }: { children: React.ReactNode; description?: string; title: string }) {
   return (
     <section className="editor-section">
@@ -195,4 +206,4 @@ function MarkdownPreview({ title, value }: { title: string; value: string }) {
   );
 }
 
-export { CheckboxGroup, EditorSection, EmptyState, Field, MarkdownPreview };
+export { CheckboxGroup, EditorSection, EmptyState, Field, MarkdownPreview, TextExcerpt };

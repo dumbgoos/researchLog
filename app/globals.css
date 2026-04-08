@@ -584,6 +584,26 @@ h1 {
   transform: translateY(-1px);
 }
 
+.row > p {
+  margin-bottom: 8px;
+}
+
+.text-excerpt {
+  color: var(--ink-soft);
+  display: -webkit-box;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 8px;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.row-kicker {
+  font-size: 0.82rem;
+  font-weight: 680;
+}
+
 .selected-row {
   background: #f6f8fa;
   border-color: #b8c0ca;
@@ -687,6 +707,12 @@ h1 {
   margin-top: 14px;
   padding-top: 12px;
   border-top: 1px solid var(--line);
+}
+
+.row-actions .button,
+.row-actions .secondary-button,
+.row-actions .danger-button {
+  box-shadow: none;
 }
 
 .inline-control {
@@ -872,22 +898,34 @@ h1 {
 .timeline {
   position: relative;
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
 .timeline-item {
+  background: #fbfcfd;
+  border: 1px solid var(--line);
+  border-radius: 8px;
   display: grid;
-  grid-template-columns: 12px minmax(0, 1fr);
-  gap: 11px;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px;
 }
 
 .timeline-dot {
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: #242424;
-  margin-top: 7px;
-  box-shadow: 0 0 0 4px #eef1f4;
+  background: #0f6b6e;
+  margin: 6px auto 0;
+  box-shadow: 0 0 0 4px #e9f6ef;
+}
+
+.timeline-content {
+  min-width: 0;
+}
+
+.timeline-content .row-heading {
+  margin-bottom: 5px;
 }
 
 .graph {
