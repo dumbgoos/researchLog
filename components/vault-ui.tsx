@@ -4,7 +4,7 @@ import type { FormEvent } from "react";
 import { vaultAssetTypes } from "@/lib/constants";
 import { formatMetadataLines } from "@/lib/form-utils";
 import type { VaultAsset, VaultAuditLog } from "@/lib/types";
-import { EmptyState } from "@/components/form-controls";
+import { ConfirmDeleteButton, EmptyState } from "@/components/form-controls";
 
 function Field({
   name,
@@ -241,9 +241,7 @@ function VaultAssetDetailPanel({
           <button className="button" disabled={disabled} type="submit">
             {disabled ? "Updating..." : "Update asset"}
           </button>
-          <button className="danger-button" disabled={disabled} onClick={() => onDeleteAsset(asset.id)} type="button">
-            Delete
-          </button>
+          <ConfirmDeleteButton disabled={disabled} onConfirm={() => onDeleteAsset(asset.id)} />
         </div>
       </form>
     </div>

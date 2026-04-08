@@ -440,10 +440,6 @@ export default function Home() {
   }
 
   async function deleteRecord(url: string, message: string) {
-    if (!window.confirm("Delete this record? This cannot be undone.")) {
-      return;
-    }
-
     await mutateRecord(url, "DELETE", undefined, message);
   }
 

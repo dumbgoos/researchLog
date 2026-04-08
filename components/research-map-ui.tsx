@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import type { AIAnalysisSettings, Idea, IdeaRelation, IdeaRelationStatus, ResearchMapSnapshot } from "@/lib/types";
-import { EmptyState } from "@/components/form-controls";
+import { ConfirmDeleteButton, EmptyState } from "@/components/form-controls";
 
 function ResearchMapCanvas({
   ideas,
@@ -351,9 +351,7 @@ function RelationDetailPanel({
         <button className="secondary-button compact-button" disabled={disabled} onClick={() => onUpdateStatus(relation.id, "Rejected", reviewNote)} type="button">
           Reject
         </button>
-        <button className="danger-button" disabled={disabled} onClick={() => onDeleteRelation(relation.id)} type="button">
-          Delete
-        </button>
+        <ConfirmDeleteButton disabled={disabled} onConfirm={() => onDeleteRelation(relation.id)} />
       </div>
     </div>
   );
