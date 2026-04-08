@@ -7,26 +7,42 @@ import { EditorSection, Field } from "@/components/form-controls";
 
 function CreateIdeaPanel({ disabled, onSubmit }: { disabled: boolean; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
   return (
-    <div className="card">
+    <div className="card editor-card" data-kind="idea">
       <div className="card-title">
-        <h2>Create Idea</h2>
+        <div>
+          <h2>Create Idea</h2>
+          <p className="microcopy">Capture the claim first. Organization can stay light until the idea earns attention.</p>
+        </div>
       </div>
-      <form className="form" onSubmit={onSubmit}>
-        <Field name="title" label="Title" placeholder="e.g. Graph-guided experiment recall" required />
-        <Field name="summary" label="Summary" placeholder="What is the research direction?" textarea required />
-        <Field name="motivation" label="Motivation" placeholder="Why is this worth pursuing?" textarea />
-        <Field name="hypothesis" label="Hypothesis" placeholder="What do you believe might be true?" textarea />
-        <Field name="novelty" label="Novelty" placeholder="What is new or different?" textarea />
-        <label className="field">
-          <span>Status</span>
-          <select name="status" defaultValue="Inbox">
-            {ideaStatuses.map((status) => (
-              <option key={status}>{status}</option>
-            ))}
-          </select>
-        </label>
-        <Field name="tags" label="Tags" placeholder="llm, graph, reproducibility" />
-        <Field name="relatedPapers" label="Related papers" placeholder="One paper or URL per line" textarea />
+      <form className="form editor-form" onSubmit={onSubmit}>
+        <EditorSection title="Seed" description="The smallest useful version of the idea.">
+          <Field name="title" label="Title" placeholder="e.g. Graph-guided experiment recall" required />
+          <Field
+            name="summary"
+            label="Summary"
+            placeholder="What is the research direction?"
+            hint="One or two sentences is enough."
+            textarea
+            required
+          />
+        </EditorSection>
+        <EditorSection title="Claim" description="Make the uncertainty explicit before experiments begin.">
+          <Field name="motivation" label="Motivation" placeholder="Why is this worth pursuing?" textarea />
+          <Field name="hypothesis" label="Hypothesis" placeholder="What do you believe might be true?" textarea />
+          <Field name="novelty" label="Novelty" placeholder="What is new or different?" textarea />
+        </EditorSection>
+        <EditorSection title="Organize" description="Lightweight routing for future retrieval.">
+          <label className="field">
+            <span>Status</span>
+            <select name="status" defaultValue="Inbox">
+              {ideaStatuses.map((status) => (
+                <option key={status}>{status}</option>
+              ))}
+            </select>
+          </label>
+          <Field name="tags" label="Tags" placeholder="llm, graph, reproducibility" />
+          <Field name="relatedPapers" label="Related papers" placeholder="One paper or URL per line" textarea />
+        </EditorSection>
         <div className="form-actions">
           <button className="button" disabled={disabled} type="submit">
             {disabled ? "Saving..." : "Save idea"}
@@ -49,7 +65,7 @@ function IdeaDetailPanel({
   onSubmit: (event: FormEvent<HTMLFormElement>, id: string) => void;
 }) {
   return (
-    <div className="card detail-card">
+    <div className="card detail-card editor-card" data-kind="idea">
       <div className="card-title">
         <div>
           <h2>Idea Detail</h2>
@@ -60,16 +76,16 @@ function IdeaDetailPanel({
         </button>
       </div>
       <form className="form editor-form" key={idea.id} onSubmit={(event) => onSubmit(event, idea.id)}>
-        <EditorSection title="Context">
+        <EditorSection title="Context" description="Keep the idea readable on its own.">
           <Field defaultValue={idea.title} name="title" label="Title" placeholder="Idea title" required />
           <Field defaultValue={idea.summary} name="summary" label="Summary" placeholder="Short research summary" textarea required />
           <Field defaultValue={idea.motivation} name="motivation" label="Motivation" placeholder="Why this matters" textarea />
         </EditorSection>
-        <EditorSection title="Research claim">
+        <EditorSection title="Research claim" description="What should later experiments prove or disprove?">
           <Field defaultValue={idea.hypothesis} name="hypothesis" label="Hypothesis" placeholder="Research hypothesis" textarea />
           <Field defaultValue={idea.novelty} name="novelty" label="Novelty" placeholder="Novelty points" textarea />
         </EditorSection>
-        <EditorSection title="Organization">
+        <EditorSection title="Organization" description="Status, priority, and retrieval hooks.">
           <div className="form-pair">
             <label className="field">
               <span>Status</span>
