@@ -95,9 +95,11 @@ function MarkdownTextarea({
   required?: boolean;
 }) {
   const [value, setValue] = useState(defaultValue ?? "");
+  const [showPreview, setShowPreview] = useState(false);
   const insertSnippet = (snippet: string) => {
     setValue((current) => [current.trimEnd(), snippet].filter(Boolean).join("\n"));
   };
+  const wordCount = value.trim().split(/\s+/).filter(Boolean).length;
 
   return (
     <label className="field markdown-editor">
@@ -113,14 +115,21 @@ function MarkdownTextarea({
         <button className="secondary-button compact-button" onClick={() => insertSnippet("```bash\ncommand\n```")} type="button">
           Code
         </button>
+        <button className="secondary-button compact-button" onClick={() => setShowPreview((current) => !current)} type="button">
+          {showPreview ? "Edit" : "Preview"}
+        </button>
+        <span className="markdown-counter">{wordCount} words</span>
       </div>
       <textarea
+        aria-describedby={`${name}-shortcut`}
         name={name}
         onChange={(event) => setValue(event.target.value)}
         placeholder={placeholder}
         required={required}
         value={value}
       />
+      <small id={`${name}-shortcut`}>Ctrl/Command + Enter saves the active form.</small>
+      {showPreview && <MarkdownPreview title="Preview" value={value} />}
     </label>
   );
 }
