@@ -36,5 +36,5 @@ test("captures a research idea and experiment from the workspace", async ({ page
 
   await page.getByRole("link", { name: "Page" }).first().click();
   await expect(page.getByRole("heading", { name: experimentTitle })).toBeVisible();
-  await expect(page.getByText("synthetic-e2e")).toBeVisible();
+  await expect(page.getByLabel("Experiment metadata").getByText("synthetic-e2e")).toBeVisible();
 });
