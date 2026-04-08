@@ -10,7 +10,13 @@ import {
   ExperimentList
 } from "@/components/experiments-ui";
 import { CreateIdeaPanel, IdeaDetailPanel, IdeaList } from "@/components/ideas-ui";
-import { AISettingsPanel, RelationDetailPanel, ResearchMapCanvas, ResearchMapSummary } from "@/components/research-map-ui";
+import {
+  AISettingsPanel,
+  RelationDetailPanel,
+  ResearchMapCanvas,
+  ResearchMapRelationTable,
+  ResearchMapSummary
+} from "@/components/research-map-ui";
 import { CreateVaultAssetPanel, VaultAssetDetailPanel, VaultAssetList, VaultAuditList } from "@/components/vault-ui";
 import { StatCard, TimelineList } from "@/components/workspace-ui";
 import { decisionTypes, experimentStatuses, ideaStatuses, sections } from "@/lib/constants";
@@ -67,6 +73,7 @@ export default function Home() {
   const [relationProviderFilter, setRelationProviderFilter] = useState("All");
   const [relationMinConfidence, setRelationMinConfidence] = useState(0);
   const [graphViewMode, setGraphViewMode] = useState<"Network" | "Evolution" | "Clusters">("Network");
+  const [selectedMapIdeaId, setSelectedMapIdeaId] = useState<string | null>(null);
 
   const activeIdeas = ideas.filter((idea) => !["Archived", "Paused"].includes(idea.status));
   const runningExperiments = experiments.filter((experiment) => experiment.status === "Running");
@@ -1037,9 +1044,17 @@ export default function Home() {
               <ResearchMapCanvas
                 ideas={ideas}
                 relations={filteredRelations}
+                selectedIdeaId={selectedMapIdeaId}
                 selectedRelationId={selectedRelationId}
                 viewMode={graphViewMode}
+                onSelectIdea={setSelectedMapIdeaId}
                 onSelectRelation={setSelectedRelationId}
+              />
+              <ResearchMapRelationTable
+                ideaById={new Map(ideas.map((idea) => [idea.id, idea]))}
+                onSelectRelation={setSelectedRelationId}
+                relations={filteredRelations}
+                selectedRelationId={selectedRelationId}
               />
             </div>
             <div className="side-stack">
