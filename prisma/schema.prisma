@@ -1,0 +1,184 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Idea {
+  id             String        @id
+  title          String
+  summary        String
+  motivation     String        @default("")
+  hypothesis     String
+  novelty        String        @default("")
+  status         String
+  priority       String
+  tagsJson       String        @default("[]")
+  relatedPapersJson String     @default("[]")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  experiments    Experiment[]
+  decisionLogs   DecisionLog[]
+  profile        IdeaProfile?
+  outgoingRelations IdeaRelation[] @relation("SourceIdeaRelations")
+  incomingRelations IdeaRelation[] @relation("TargetIdeaRelations")
+}
+
+model Experiment {
+  id                String        @id
+  ideaId            String
+  title             String
+  objective         String
+  experimentType    String
+  status            String
+  modelName         String        @default("")
+  methodChanges     String        @default("")
+  datasetName       String
+  datasetVersion    String        @default("")
+  configJson        String        @default("{}")
+  serverAssetId     String?
+  runtimeEnv        String        @default("")
+  branchName        String        @default("")
+  commitId          String        @default("")
+  runCommand        String        @default("")
+  wandbUrl          String        @default("")
+  logPath           String        @default("")
+  ckptPath          String        @default("")
+  resultMetricsJson String        @default("{}")
+  resultSummary     String
+  analysis          String        @default("")
+  nextSteps         String        @default("")
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  idea              Idea          @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  decisionLogs      DecisionLog[]
+  assetLinks        ExperimentAssetLink[]
+}
+
+model DecisionLog {
+  id             String      @id
+  ideaId         String
+  experimentId   String?
+  title          String
+  content        String
+  decisionType   String
+  createdAt      DateTime    @default(now())
+  idea           Idea        @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  experiment     Experiment? @relation(fields: [experimentId], references: [id], onDelete: SetNull)
+}
+
+model TimelineEvent {
+  id        String   @id
+  label     String
+  detail    String
+  type      String
+  createdAt DateTime @default(now())
+}
+
+model VaultAsset {
+  id              String          @id
+  assetType       String
+  name            String
+  provider        String          @default("")
+  metadataJson    String          @default("{}")
+  encryptedSecret String?
+  maskedPreview   String          @default("")
+  status          String          @default("Active")
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  lastUsedAt      DateTime?
+  auditLogs       VaultAuditLog[]
+  experimentLinks ExperimentAssetLink[]
+}
+
+model VaultAuditLog {
+  id           String     @id
+  assetId      String?
+  actionType   String
+  actorId      String     @default("local-user")
+  metadataJson String     @default("{}")
+  createdAt    DateTime   @default(now())
+  asset        VaultAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
+}
+
+model ExperimentAssetLink {
+  id           String      @id
+  experimentId String
+  assetId      String
+  createdAt    DateTime    @default(now())
+  experiment   Experiment  @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  asset        VaultAsset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@unique([experimentId, assetId])
+}
+
+model IdeaProfile {
+  ideaId                String   @id
+  profileSummary        String
+  problemStatement      String
+  methodSummary         String
+  assumptionsJson       String   @default("[]")
+  noveltyPointsJson     String   @default("[]")
+  experimentSignalsJson String   @default("[]")
+  keywordsJson          String   @default("[]")
+  embeddingVector       String?
+  updatedAt             DateTime @updatedAt
+  idea                  Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+}
+
+model IdeaRelation {
+  id              String   @id
+  sourceIdeaId    String
+  targetIdeaId    String
+  relationType    String
+  confidence      Float
+  status          String   @default("Suggested")
+  reviewNote      String   @default("")
+  rationale       String
+  evidenceJson    String   @default("[]")
+  generatedByModel Boolean @default(false)
+  modelProvider   String   @default("rule-engine")
+  modelName       String   @default("local-rules-v1")
+  analysisVersion String   @default("rules-v1")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  sourceIdea      Idea     @relation("SourceIdeaRelations", fields: [sourceIdeaId], references: [id], onDelete: Cascade)
+  targetIdea      Idea     @relation("TargetIdeaRelations", fields: [targetIdeaId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceIdeaId, targetIdeaId, relationType, analysisVersion])
+}
+
+model GraphAnalysisJob {
+  id           String    @id
+  scope        String
+  status       String
+  provider     String
+  modelName    String
+  configJson   String    @default("{}")
+  relationsProposed Int  @default(0)
+  relationsInserted Int  @default(0)
+  candidatePairs Int      @default(0)
+  fallbackUsed Boolean   @default(false)
+  startedAt    DateTime  @default(now())
+  finishedAt   DateTime?
+  errorMessage String?
+}
+
+model AIAnalysisSettings {
+  id                     String   @id
+  analysisMode           String   @default("Balanced")
+  analysisFocus          String   @default("Evolution-oriented")
+  graphGranularity       String   @default("Medium")
+  refreshBehavior        String   @default("Manual refresh only")
+  modelProvider          String   @default("rule-engine")
+  modelName              String   @default("local-rules-v1")
+  maxCandidateNeighbors  Int      @default(8)
+  confidenceThreshold    Float    @default(0.55)
+  tokenBudget            Int      @default(4000)
+  maxGraphDensity        Float    @default(0.35)
+  explanationVerbosity   String   @default("Concise")
+  updatedAt              DateTime @updatedAt
+}
