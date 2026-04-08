@@ -1,6 +1,7 @@
 "use client";
 
 import type { Experiment, Idea } from "@/lib/types";
+import { EmptyState } from "@/components/form-controls";
 
 function TodayPanel({
   activeIdeas,
@@ -40,7 +41,13 @@ function TodayPanel({
       </div>
       <div className="list">
         {nextStepExperiments.length === 0 && (
-          <p className="empty-state">No explicit next steps yet. Add one to an active experiment.</p>
+          <EmptyState
+            actionLabel="Plan run"
+            description="Add next steps to a planned or running experiment, and this queue becomes tomorrow's starting point."
+            onAction={onCreateExperiment}
+            title="No next steps yet"
+            tone="experiment"
+          />
         )}
         {nextStepExperiments.map((experiment) => (
           <article className="row" key={experiment.id}>
@@ -85,6 +92,13 @@ function ActiveThreadsPanel({
         <span className="pill">research memory</span>
       </div>
       <div className="list">
+        {threads.length === 0 && (
+          <EmptyState
+            description="Create a research idea first. Threads become useful once experiments start attaching to them."
+            title="No active threads yet"
+            tone="idea"
+          />
+        )}
         {threads.map((idea) => (
           <article className="row" key={idea.id}>
             <div className="row-heading">
@@ -130,7 +144,13 @@ function StaleExperimentsPanel({
         <span className="pill">{staleExperiments.length} review</span>
       </div>
       <div className="list">
-        {staleExperiments.length === 0 && <p className="empty-state">No stale active experiments right now.</p>}
+        {staleExperiments.length === 0 && (
+          <EmptyState
+            description="Everything active has recent movement. When a planned or running experiment sits too long, it will surface here."
+            title="No stale experiments"
+            tone="experiment"
+          />
+        )}
         {staleExperiments.map((experiment) => (
           <article className="row" key={experiment.id}>
             <div className="row-heading">

@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { decisionTypes } from "@/lib/constants";
 import type { DecisionLog, Experiment, Idea } from "@/lib/types";
-import { EditorSection, Field, MarkdownPreview } from "@/components/form-controls";
+import { EditorSection, EmptyState, Field, MarkdownPreview } from "@/components/form-controls";
 
 function CreateDecisionPanel({
   disabled,
@@ -152,7 +152,13 @@ function DecisionList({
 
   return (
     <div className="list">
-      {decisions.length === 0 && <p className="empty-state">No decisions match this view.</p>}
+      {decisions.length === 0 && (
+        <EmptyState
+          description="No decision matches the current search. Try a broader query, or record the next research choice in the editor panel."
+          title="No decisions in this view"
+          tone="decision"
+        />
+      )}
       {decisions.map((decision) => (
         <article className={`row ${selectedDecisionId === decision.id ? "selected-row" : ""}`} data-kind="decision" key={decision.id}>
           <div className="row-heading">

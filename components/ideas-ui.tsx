@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { ideaStatuses } from "@/lib/constants";
 import type { Idea, IdeaStatus } from "@/lib/types";
-import { EditorSection, Field } from "@/components/form-controls";
+import { EditorSection, EmptyState, Field } from "@/components/form-controls";
 
 function CreateIdeaPanel({ disabled, onSubmit }: { disabled: boolean; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
   return (
@@ -143,7 +143,13 @@ function IdeaList({
 }) {
   return (
     <div className="list">
-      {ideas.length === 0 && <p className="empty-state">No ideas match this view.</p>}
+      {ideas.length === 0 && (
+        <EmptyState
+          description="No idea matches the current search or status filter. Broaden the view, or capture a fresh idea in the panel on the right."
+          title="No ideas in this view"
+          tone="idea"
+        />
+      )}
       {ideas.map((idea) => (
         <article className={`row ${selectedIdeaId === idea.id ? "selected-row" : ""}`} data-kind="idea" key={idea.id}>
           <div className="row-heading">

@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { experimentStatuses } from "@/lib/constants";
 import type { Experiment, ExperimentStatus, Idea, VaultAsset } from "@/lib/types";
-import { CheckboxGroup, EditorSection, Field, MarkdownPreview } from "@/components/form-controls";
+import { CheckboxGroup, EditorSection, EmptyState, Field, MarkdownPreview } from "@/components/form-controls";
 
 function CreateExperimentPanel({
   disabled,
@@ -272,7 +272,13 @@ function ExperimentList({
 
   return (
     <div className="list">
-      {experiments.length === 0 && <p className="empty-state">No experiments match this view.</p>}
+      {experiments.length === 0 && (
+        <EmptyState
+          description="No experiment matches the current filters. Adjust the query, or plan a new run from the editor panel."
+          title="No experiments in this view"
+          tone="experiment"
+        />
+      )}
       {experiments.map((experiment) => (
         <article className={`row ${selectedExperimentId === experiment.id ? "selected-row" : ""}`} data-kind="experiment" key={experiment.id}>
           <div className="row-heading">
