@@ -1,9 +1,19 @@
 "use client";
 
 import type { TimelineEvent } from "@/lib/types";
-function StatCard({ label, value, detail }: { label: string; value: number | string; detail: string }) {
+function StatCard({
+  detail,
+  label,
+  tone,
+  value
+}: {
+  detail: string;
+  label: string;
+  tone?: "good" | "warn" | "neutral";
+  value: number | string;
+}) {
   return (
-    <article className="card">
+    <article className={`card stat-card ${tone ? `stat-card-${tone}` : ""}`}>
       <div className="muted">{label}</div>
       <div className="stat-value">{value}</div>
       <div className="muted">{detail}</div>

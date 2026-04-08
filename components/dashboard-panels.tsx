@@ -5,10 +5,12 @@ import type { Experiment, Idea } from "@/lib/types";
 function TodayPanel({
   activeIdeas,
   experiments,
+  onCreateExperiment,
   onOpenExperiment
 }: {
   activeIdeas: Idea[];
   experiments: Experiment[];
+  onCreateExperiment: () => void;
   onOpenExperiment: (id: string) => void;
 }) {
   const nextStepExperiments = experiments
@@ -16,13 +18,25 @@ function TodayPanel({
     .slice(0, 4);
 
   return (
-    <div className="card">
+    <div className="card today-card">
       <div className="card-title">
         <div>
           <h2>Today</h2>
           <p className="microcopy">Pick up the most actionable research threads.</p>
         </div>
         <span className="pill">{nextStepExperiments.length} next steps</span>
+      </div>
+      <div className="today-hero">
+        <div>
+          <p className="microcopy">Focus queue</p>
+          <h3>{nextStepExperiments[0]?.title ?? "Choose the next experiment to unblock."}</h3>
+          <p className="muted">
+            {nextStepExperiments[0]?.nextSteps || "Add next steps to an active run so tomorrow has a clear starting point."}
+          </p>
+        </div>
+        <button className="button" onClick={() => nextStepExperiments[0] ? onOpenExperiment(nextStepExperiments[0].id) : onCreateExperiment()} type="button">
+          {nextStepExperiments[0] ? "Resume" : "Plan run"}
+        </button>
       </div>
       <div className="list">
         {nextStepExperiments.length === 0 && (
@@ -136,6 +150,35 @@ function StaleExperimentsPanel({
   );
 }
 
+function MapHealthPanel({
+  profiles,
+  relations,
+  onOpenMap
+}: {
+  profiles: number;
+  relations: number;
+  onOpenMap: () => void;
+}) {
+  return (
+    <div className="card health-card">
+      <div className="card-title">
+        <div>
+          <h2>Research Map</h2>
+          <p className="microcopy">Keep idea relationships explainable and reviewed.</p>
+        </div>
+        <span className="pill">{relations} relations</span>
+      </div>
+      <div className="metadata-grid dashboard-meta">
+        <Metric label="Profiles" value={profiles} />
+        <Metric label="Relations" value={relations} />
+      </div>
+      <button className="secondary-button compact-button" onClick={onOpenMap} type="button">
+        Review graph
+      </button>
+    </div>
+  );
+}
+
 function Metric({ label, value }: { label: string; value: number | string }) {
   return (
     <div className="metadata-item">
@@ -145,4 +188,4 @@ function Metric({ label, value }: { label: string; value: number | string }) {
   );
 }
 
-export { ActiveThreadsPanel, StaleExperimentsPanel, TodayPanel };
+export { ActiveThreadsPanel, MapHealthPanel, StaleExperimentsPanel, TodayPanel };

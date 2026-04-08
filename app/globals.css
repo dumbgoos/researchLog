@@ -280,6 +280,11 @@ h1 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.dashboard-workbench {
+  grid-template-columns: minmax(0, 1.35fr) minmax(380px, 0.85fr);
+  align-items: start;
+}
+
 .workbench-grid {
   grid-template-columns: minmax(0, 1.52fr) minmax(372px, 0.78fr);
   align-items: start;
@@ -297,6 +302,63 @@ h1 {
 .card:hover {
   border-color: #d6dbe1;
   box-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
+}
+
+.stat-card {
+  min-height: 124px;
+  overflow: hidden;
+  position: relative;
+}
+
+.stat-card::after {
+  background: #e5e7eb;
+  border-radius: 999px;
+  content: "";
+  height: 42px;
+  opacity: 0.5;
+  position: absolute;
+  right: -14px;
+  top: -18px;
+  width: 42px;
+}
+
+.stat-card-good::after {
+  background: #d8ebe1;
+}
+
+.stat-card-warn::after {
+  background: #f2e5c8;
+}
+
+.today-card {
+  padding: 20px;
+}
+
+.today-hero {
+  align-items: end;
+  background: #f7f9fb;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin-bottom: 14px;
+  padding: 18px;
+}
+
+.today-hero h3 {
+  font-size: 1.28rem;
+  line-height: 1.22;
+  margin-bottom: 8px;
+}
+
+.today-hero p:last-child {
+  margin-bottom: 0;
+}
+
+.health-card {
+  display: grid;
+  gap: 14px;
 }
 
 .detail-card {
@@ -841,6 +903,7 @@ h1 {
   }
 
   .dashboard-grid,
+  .dashboard-workbench,
   .workbench-grid,
   .vault-grid,
   .metadata-grid,
@@ -908,5 +971,9 @@ h1 {
   .danger-button,
   .inline-link-button {
     width: 100%;
+  }
+
+  .today-hero {
+    grid-template-columns: 1fr;
   }
 }

@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { CreateDecisionPanel, DecisionDetailPanel, DecisionList } from "@/components/decisions-ui";
-import { ActiveThreadsPanel, StaleExperimentsPanel, TodayPanel } from "@/components/dashboard-panels";
+import { ActiveThreadsPanel, MapHealthPanel, StaleExperimentsPanel, TodayPanel } from "@/components/dashboard-panels";
 import {
   CreateExperimentPanel,
   ExperimentComparisonPanel,
@@ -659,17 +659,18 @@ export default function Home() {
         {activeSection === "dashboard" && (
           <>
             <section className="grid dashboard-grid">
-              <StatCard label="Active ideas" value={activeIdeas.length} detail="Not paused or archived" />
-              <StatCard label="Experiments" value={experiments.length} detail={`${runningExperiments.length} running`} />
-              <StatCard label="Decisions" value={decisions.length} detail="Reasoning captured" />
-              <StatCard label="Graph relations" value={researchMap.relations.length} detail={`${researchMap.profiles.length} profiles`} />
+              <StatCard label="Active ideas" value={activeIdeas.length} detail="Not paused or archived" tone="good" />
+              <StatCard label="Experiments" value={experiments.length} detail={`${runningExperiments.length} running`} tone="neutral" />
+              <StatCard label="Decisions" value={decisions.length} detail="Reasoning captured" tone="neutral" />
+              <StatCard label="Graph relations" value={researchMap.relations.length} detail={`${researchMap.profiles.length} profiles`} tone="warn" />
             </section>
 
-            <section className="grid workbench-grid">
+            <section className="grid dashboard-workbench">
               <div className="side-stack">
                 <TodayPanel
                   activeIdeas={activeIdeas}
                   experiments={experiments}
+                  onCreateExperiment={() => setActiveSection("experiments")}
                   onOpenExperiment={(id) => {
                     setSelectedExperimentId(id);
                     setActiveSection("experiments");
@@ -691,6 +692,11 @@ export default function Home() {
                     setSelectedExperimentId(id);
                     setActiveSection("experiments");
                   }}
+                />
+                <MapHealthPanel
+                  profiles={researchMap.profiles.length}
+                  relations={researchMap.relations.length}
+                  onOpenMap={() => setActiveSection("map")}
                 />
                 <div className="card">
                   <div className="card-title">
