@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { experimentStatuses } from "@/lib/constants";
 import type { Experiment, ExperimentStatus, Idea, VaultAsset } from "@/lib/types";
-import { CheckboxGroup, Field, MarkdownPreview } from "@/components/form-controls";
+import { CheckboxGroup, EditorSection, Field, MarkdownPreview } from "@/components/form-controls";
 
 function CreateExperimentPanel({
   disabled,
@@ -103,74 +103,58 @@ function ExperimentDetailPanel({
           Close
         </button>
       </div>
-      <form className="form" key={experiment.id} onSubmit={(event) => onSubmit(event, experiment.id)}>
-        <Field defaultValue={experiment.title} name="title" label="Title" placeholder="Experiment title" required />
-        <Field defaultValue={experiment.objective} name="objective" label="Objective" placeholder="Research question" textarea />
-        <div className="form-pair">
-          <Field
-            defaultValue={experiment.experimentType}
-            name="experimentType"
-            label="Type"
-            placeholder="Ablation"
+      <form className="form editor-form" key={experiment.id} onSubmit={(event) => onSubmit(event, experiment.id)}>
+        <EditorSection title="Context">
+          <Field defaultValue={experiment.title} name="title" label="Title" placeholder="Experiment title" required />
+          <Field defaultValue={experiment.objective} name="objective" label="Objective" placeholder="Research question" textarea />
+          <div className="form-pair">
+            <Field defaultValue={experiment.experimentType} name="experimentType" label="Type" placeholder="Ablation" />
+            <label className="field">
+              <span>Status</span>
+              <select name="status" defaultValue={experiment.status}>
+                {experimentStatuses.map((status) => (
+                  <option key={status}>{status}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </EditorSection>
+        <EditorSection title="Method">
+          <div className="form-pair">
+            <Field defaultValue={experiment.modelName} name="modelName" label="Model" placeholder="model name" />
+            <Field defaultValue={experiment.datasetName} name="datasetName" label="Dataset" placeholder="Dataset name" />
+          </div>
+          <div className="form-pair">
+            <Field defaultValue={experiment.datasetVersion} name="datasetVersion" label="Dataset version" placeholder="v1" />
+            <Field defaultValue={experiment.runtimeEnv} name="runtimeEnv" label="Runtime env" placeholder="server/env" />
+          </div>
+          <Field defaultValue={experiment.methodChanges} name="methodChanges" label="Method changes (Markdown)" placeholder="Changes from previous runs" markdown textarea />
+          <Field defaultValue={experiment.configJson} name="configJson" label="Config JSON" placeholder="{ }" textarea />
+        </EditorSection>
+        <EditorSection title="Run">
+          <CheckboxGroup
+            label="Linked assets"
+            name="linkedAssetIds"
+            options={vaultAssets.map((asset) => ({ label: `${asset.name} (${asset.assetType})`, value: asset.id }))}
+            values={experiment.linkedAssetIds}
           />
-          <label className="field">
-            <span>Status</span>
-            <select name="status" defaultValue={experiment.status}>
-              {experimentStatuses.map((status) => (
-                <option key={status}>{status}</option>
-              ))}
-            </select>
-          </label>
-        </div>
-        <div className="form-pair">
-          <Field defaultValue={experiment.modelName} name="modelName" label="Model" placeholder="model name" />
-          <Field defaultValue={experiment.datasetName} name="datasetName" label="Dataset" placeholder="Dataset name" />
-        </div>
-        <Field
-          defaultValue={experiment.methodChanges}
-          name="methodChanges"
-          label="Method changes (Markdown)"
-          placeholder="Changes from previous runs"
-          markdown
-          textarea
-        />
-        <div className="form-pair">
-          <Field defaultValue={experiment.datasetVersion} name="datasetVersion" label="Dataset version" placeholder="v1" />
-          <Field defaultValue={experiment.runtimeEnv} name="runtimeEnv" label="Runtime env" placeholder="server/env" />
-        </div>
-        <Field defaultValue={experiment.configJson} name="configJson" label="Config JSON" placeholder="{ }" textarea />
-        <CheckboxGroup
-          label="Linked assets"
-          name="linkedAssetIds"
-          options={vaultAssets.map((asset) => ({ label: `${asset.name} (${asset.assetType})`, value: asset.id }))}
-          values={experiment.linkedAssetIds}
-        />
-        <div className="form-pair">
-          <Field defaultValue={experiment.branchName} name="branchName" label="Branch" placeholder="main" />
-          <Field defaultValue={experiment.commitId} name="commitId" label="Commit" placeholder="git commit id" />
-        </div>
-        <Field defaultValue={experiment.runCommand} name="runCommand" label="Run command" placeholder="python train.py ..." textarea />
-        <div className="form-pair">
-          <Field defaultValue={experiment.wandbUrl} name="wandbUrl" label="W&B URL" placeholder="https://wandb.ai/..." />
-          <Field defaultValue={experiment.logPath} name="logPath" label="Log path" placeholder="logs/run.log" />
-        </div>
-        <Field defaultValue={experiment.ckptPath} name="ckptPath" label="Checkpoint path" placeholder="checkpoints/run.pt" />
-        <Field
-          defaultValue={experiment.resultMetricsJson}
-          name="resultMetricsJson"
-          label="Metrics JSON"
-          placeholder="{ }"
-          textarea
-        />
-        <Field
-          defaultValue={experiment.resultSummary}
-          name="resultSummary"
-          label="Result summary"
-          placeholder="What happened?"
-          textarea
-        />
-        <Field defaultValue={experiment.analysis} name="analysis" label="Analysis (Markdown)" placeholder="Why did it happen?" markdown textarea />
-        <Field defaultValue={experiment.nextSteps} name="nextSteps" label="Next steps (Markdown)" placeholder="What should happen next?" markdown textarea />
+          <div className="form-pair">
+            <Field defaultValue={experiment.branchName} name="branchName" label="Branch" placeholder="main" />
+            <Field defaultValue={experiment.commitId} name="commitId" label="Commit" placeholder="git commit id" />
+          </div>
+          <Field defaultValue={experiment.runCommand} name="runCommand" label="Run command" placeholder="python train.py ..." textarea />
+          <div className="form-pair">
+            <Field defaultValue={experiment.wandbUrl} name="wandbUrl" label="W&B URL" placeholder="https://wandb.ai/..." />
+            <Field defaultValue={experiment.logPath} name="logPath" label="Log path" placeholder="logs/run.log" />
+          </div>
+          <Field defaultValue={experiment.ckptPath} name="ckptPath" label="Checkpoint path" placeholder="checkpoints/run.pt" />
+        </EditorSection>
+        <EditorSection title="Results">
+          <Field defaultValue={experiment.resultMetricsJson} name="resultMetricsJson" label="Metrics JSON" placeholder="{ }" textarea />
+          <Field defaultValue={experiment.resultSummary} name="resultSummary" label="Result summary" placeholder="What happened?" textarea />
+          <Field defaultValue={experiment.analysis} name="analysis" label="Analysis (Markdown)" placeholder="Why did it happen?" markdown textarea />
+          <Field defaultValue={experiment.nextSteps} name="nextSteps" label="Next steps (Markdown)" placeholder="What should happen next?" markdown textarea />
+        </EditorSection>
         <div className="form-actions">
           <button className="button" disabled={disabled} type="submit">
             {disabled ? "Updating..." : "Update experiment"}
@@ -279,7 +263,7 @@ function ExperimentList({
     <div className="list">
       {experiments.length === 0 && <p className="empty-state">No experiments match this view.</p>}
       {experiments.map((experiment) => (
-        <article className={`row ${selectedExperimentId === experiment.id ? "selected-row" : ""}`} key={experiment.id}>
+        <article className={`row ${selectedExperimentId === experiment.id ? "selected-row" : ""}`} data-kind="experiment" key={experiment.id}>
           <div className="row-heading">
             <h3>{experiment.title}</h3>
             <span className="pill">{experiment.status}</span>

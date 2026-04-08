@@ -145,7 +145,7 @@ function DecisionList({
     <div className="list">
       {decisions.length === 0 && <p className="empty-state">No decisions match this view.</p>}
       {decisions.map((decision) => (
-        <article className={`row ${selectedDecisionId === decision.id ? "selected-row" : ""}`} key={decision.id}>
+        <article className={`row ${selectedDecisionId === decision.id ? "selected-row" : ""}`} data-kind="decision" key={decision.id}>
           <div className="row-heading">
             <h3>{decision.title}</h3>
             <span className="pill">{decision.decisionType}</span>
