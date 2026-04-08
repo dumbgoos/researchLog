@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { ideaStatuses } from "@/lib/constants";
 import type { Idea, IdeaStatus } from "@/lib/types";
-import { EditorSection, EmptyState, Field, TextExcerpt } from "@/components/form-controls";
+import { ConfirmDeleteButton, EditorSection, EmptyState, Field, TextExcerpt } from "@/components/form-controls";
 
 function CreateIdeaPanel({ disabled, onSubmit }: { disabled: boolean; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
   return (
@@ -192,9 +192,7 @@ function IdeaList({
                 Page
               </a>
               {onDeleteIdea && (
-                <button className="danger-button" disabled={disabled} onClick={() => onDeleteIdea(idea.id)} type="button">
-                  Delete
-                </button>
+                <ConfirmDeleteButton disabled={disabled} onConfirm={() => onDeleteIdea(idea.id)} />
               )}
             </div>
           )}

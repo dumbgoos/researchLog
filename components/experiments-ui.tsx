@@ -3,7 +3,15 @@
 import type { FormEvent } from "react";
 import { experimentStatuses } from "@/lib/constants";
 import type { Experiment, ExperimentStatus, Idea, VaultAsset } from "@/lib/types";
-import { CheckboxGroup, EditorSection, EmptyState, Field, MarkdownPreview, TextExcerpt } from "@/components/form-controls";
+import {
+  CheckboxGroup,
+  ConfirmDeleteButton,
+  EditorSection,
+  EmptyState,
+  Field,
+  MarkdownPreview,
+  TextExcerpt
+} from "@/components/form-controls";
 
 function CreateExperimentPanel({
   disabled,
@@ -326,14 +334,7 @@ function ExperimentList({
                 </button>
               )}
               {onDeleteExperiment && (
-                <button
-                  className="danger-button"
-                  disabled={disabled}
-                  onClick={() => onDeleteExperiment(experiment.id)}
-                  type="button"
-                >
-                  Delete
-                </button>
+                <ConfirmDeleteButton disabled={disabled} onConfirm={() => onDeleteExperiment(experiment.id)} />
               )}
             </div>
           )}

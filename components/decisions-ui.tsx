@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { decisionTypes } from "@/lib/constants";
 import type { DecisionLog, Experiment, Idea } from "@/lib/types";
-import { EditorSection, EmptyState, Field, MarkdownPreview, TextExcerpt } from "@/components/form-controls";
+import { ConfirmDeleteButton, EditorSection, EmptyState, Field, MarkdownPreview, TextExcerpt } from "@/components/form-controls";
 
 function CreateDecisionPanel({
   disabled,
@@ -195,14 +195,7 @@ function DecisionList({
                 Page
               </a>
               {onDeleteDecision && (
-                <button
-                  className="danger-button"
-                  disabled={disabled}
-                  onClick={() => onDeleteDecision(decision.id)}
-                  type="button"
-                >
-                  Delete
-                </button>
+                <ConfirmDeleteButton disabled={disabled} onConfirm={() => onDeleteDecision(decision.id)} />
               )}
             </div>
           )}

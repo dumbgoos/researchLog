@@ -2,6 +2,38 @@
 
 import { useState } from "react";
 
+function ConfirmDeleteButton({
+  disabled,
+  label = "Delete",
+  onConfirm
+}: {
+  disabled?: boolean;
+  label?: string;
+  onConfirm: () => void;
+}) {
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  if (isConfirming) {
+    return (
+      <span className="confirm-action" role="group" aria-label="Confirm delete">
+        <span>Delete?</span>
+        <button className="danger-button compact-button" disabled={disabled} onClick={onConfirm} type="button">
+          Confirm
+        </button>
+        <button className="secondary-button compact-button" disabled={disabled} onClick={() => setIsConfirming(false)} type="button">
+          Cancel
+        </button>
+      </span>
+    );
+  }
+
+  return (
+    <button className="danger-button" disabled={disabled} onClick={() => setIsConfirming(true)} type="button">
+      {label}
+    </button>
+  );
+}
+
 function Field({
   name,
   label,
@@ -206,4 +238,4 @@ function MarkdownPreview({ title, value }: { title: string; value: string }) {
   );
 }
 
-export { CheckboxGroup, EditorSection, EmptyState, Field, MarkdownPreview, TextExcerpt };
+export { CheckboxGroup, ConfirmDeleteButton, EditorSection, EmptyState, Field, MarkdownPreview, TextExcerpt };

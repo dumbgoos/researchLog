@@ -715,6 +715,24 @@ h1 {
   box-shadow: none;
 }
 
+.confirm-action {
+  align-items: center;
+  background: var(--red-soft);
+  border: 1px solid #efc4c0;
+  border-radius: 8px;
+  color: var(--danger);
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 5px;
+}
+
+.confirm-action span {
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0 3px;
+}
+
 .inline-control {
   display: grid;
   gap: 5px;
