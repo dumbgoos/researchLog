@@ -165,7 +165,8 @@ export default function Home() {
 
   async function createIdea(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const title = String(form.get("title") ?? "").trim();
     const summary = String(form.get("summary") ?? "").trim();
 
@@ -202,7 +203,7 @@ export default function Home() {
       return;
     }
 
-    event.currentTarget.reset();
+    formElement.reset();
     setNotice("Idea saved.");
     await loadWorkspace();
     setIsSaving(false);
@@ -210,7 +211,8 @@ export default function Home() {
 
   async function createExperiment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const title = String(form.get("title") ?? "").trim();
 
     if (!title) {
@@ -254,7 +256,7 @@ export default function Home() {
       return;
     }
 
-    event.currentTarget.reset();
+    formElement.reset();
     setNotice("Experiment saved.");
     await loadWorkspace();
     setIsSaving(false);
@@ -262,7 +264,8 @@ export default function Home() {
 
   async function createDecision(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const title = String(form.get("title") ?? "").trim();
     const content = String(form.get("content") ?? "").trim();
 
@@ -290,7 +293,7 @@ export default function Home() {
       return;
     }
 
-    event.currentTarget.reset();
+    formElement.reset();
     setNotice("Decision saved.");
     await loadWorkspace();
     setIsSaving(false);
@@ -298,7 +301,8 @@ export default function Home() {
 
   async function createVaultAsset(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const assetType = String(form.get("assetType") ?? "Token") as VaultAssetType;
     const metadata = parseMetadataLines(String(form.get("metadata") ?? ""));
 
@@ -323,7 +327,7 @@ export default function Home() {
       return;
     }
 
-    event.currentTarget.reset();
+    formElement.reset();
     setNotice("Vault asset saved.");
     await loadWorkspace();
     setIsSaving(false);
