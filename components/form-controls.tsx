@@ -7,6 +7,7 @@ function Field({
   label,
   placeholder,
   defaultValue,
+  hint,
   markdown,
   textarea,
   required
@@ -15,6 +16,7 @@ function Field({
   label: string;
   placeholder: string;
   defaultValue?: string;
+  hint?: string;
   markdown?: boolean;
   textarea?: boolean;
   required?: boolean;
@@ -23,6 +25,7 @@ function Field({
     return (
       <MarkdownTextarea
         defaultValue={defaultValue}
+        hint={hint}
         label={label}
         name={name}
         placeholder={placeholder}
@@ -34,6 +37,7 @@ function Field({
   return (
     <label className="field">
       <span>{label}</span>
+      {hint && <small>{hint}</small>}
       {textarea ? (
         <textarea defaultValue={defaultValue} name={name} placeholder={placeholder} required={required} />
       ) : (
@@ -45,12 +49,14 @@ function Field({
 
 function MarkdownTextarea({
   defaultValue,
+  hint,
   label,
   name,
   placeholder,
   required
 }: {
   defaultValue?: string;
+  hint?: string;
   label: string;
   name: string;
   placeholder: string;
@@ -64,6 +70,7 @@ function MarkdownTextarea({
   return (
     <label className="field markdown-editor">
       <span>{label}</span>
+      {hint && <small>{hint}</small>}
       <div className="markdown-toolbar" aria-label={`${label} formatting`}>
         <button className="secondary-button compact-button" onClick={() => insertSnippet("### Heading")} type="button">
           Heading
@@ -111,10 +118,13 @@ function CheckboxGroup({
   );
 }
 
-function EditorSection({ children, title }: { children: React.ReactNode; title: string }) {
+function EditorSection({ children, description, title }: { children: React.ReactNode; description?: string; title: string }) {
   return (
     <section className="editor-section">
-      <div className="editor-section-title">{title}</div>
+      <div className="editor-section-title">
+        <span>{title}</span>
+        {description && <p>{description}</p>}
+      </div>
       {children}
     </section>
   );

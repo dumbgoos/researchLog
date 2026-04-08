@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { decisionTypes } from "@/lib/constants";
 import type { DecisionLog, Experiment, Idea } from "@/lib/types";
-import { Field, MarkdownPreview } from "@/components/form-controls";
+import { EditorSection, Field, MarkdownPreview } from "@/components/form-controls";
 
 function CreateDecisionPanel({
   disabled,
@@ -17,42 +17,49 @@ function CreateDecisionPanel({
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
   return (
-    <div className="card">
+    <div className="card editor-card" data-kind="decision">
       <div className="card-title">
-        <h2>Add Decision</h2>
+        <div>
+          <h2>Add Decision</h2>
+          <p className="microcopy">Write down the choice while the evidence is still fresh.</p>
+        </div>
       </div>
-      <form className="form" onSubmit={onSubmit}>
-        <label className="field">
-          <span>Idea</span>
-          <select name="ideaId" disabled={ideas.length === 0}>
-            {ideas.map((idea) => (
-              <option key={idea.id} value={idea.id}>
-                {idea.title}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="field">
-          <span>Experiment</span>
-          <select name="experimentId" defaultValue="">
-            <option value="">No specific experiment</option>
-            {experiments.map((experiment) => (
-              <option key={experiment.id} value={experiment.id}>
-                {experiment.title}
-              </option>
-            ))}
-          </select>
-        </label>
-        <Field name="title" label="Title" placeholder="e.g. Pause this direction" required />
-        <label className="field">
-          <span>Decision type</span>
-          <select name="decisionType" defaultValue="continue">
-            {decisionTypes.map((type) => (
-              <option key={type}>{type}</option>
-            ))}
-          </select>
-        </label>
-        <Field name="content" label="Reasoning (Markdown)" placeholder="Why are we making this move?" markdown textarea required />
+      <form className="form editor-form" onSubmit={onSubmit}>
+        <EditorSection title="Scope" description="Connect the decision to the work it changes.">
+          <label className="field">
+            <span>Idea</span>
+            <select name="ideaId" disabled={ideas.length === 0}>
+              {ideas.map((idea) => (
+                <option key={idea.id} value={idea.id}>
+                  {idea.title}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="field">
+            <span>Experiment</span>
+            <select name="experimentId" defaultValue="">
+              <option value="">No specific experiment</option>
+              {experiments.map((experiment) => (
+                <option key={experiment.id} value={experiment.id}>
+                  {experiment.title}
+                </option>
+              ))}
+            </select>
+          </label>
+        </EditorSection>
+        <EditorSection title="Decision record" description="The choice and the reason it should survive memory drift.">
+          <Field name="title" label="Title" placeholder="e.g. Pause this direction" required />
+          <label className="field">
+            <span>Decision type</span>
+            <select name="decisionType" defaultValue="continue">
+              {decisionTypes.map((type) => (
+                <option key={type}>{type}</option>
+              ))}
+            </select>
+          </label>
+          <Field name="content" label="Reasoning (Markdown)" placeholder="Why are we making this move?" markdown textarea required />
+        </EditorSection>
         <div className="form-actions">
           <button className="button" disabled={disabled} type="submit">
             {disabled ? "Saving..." : "Save decision"}
@@ -79,7 +86,7 @@ function DecisionDetailPanel({
   onSubmit: (event: FormEvent<HTMLFormElement>, id: string) => void;
 }) {
   return (
-    <div className="card detail-card">
+    <div className="card detail-card editor-card" data-kind="decision">
       <div className="card-title">
         <div>
           <h2>Decision Detail</h2>
@@ -89,28 +96,30 @@ function DecisionDetailPanel({
           Close
         </button>
       </div>
-      <form className="form" key={decision.id} onSubmit={(event) => onSubmit(event, decision.id)}>
-        <Field defaultValue={decision.title} name="title" label="Title" placeholder="Decision title" required />
-        <label className="field">
-          <span>Decision type</span>
-          <select name="decisionType" defaultValue={decision.decisionType}>
-            {decisionTypes.map((type) => (
-              <option key={type}>{type}</option>
-            ))}
-          </select>
-        </label>
-        <label className="field">
-          <span>Experiment</span>
-          <select name="experimentId" defaultValue={decision.experimentId ?? ""}>
-            <option value="">No specific experiment</option>
-            {experiments.map((experiment) => (
-              <option key={experiment.id} value={experiment.id}>
-                {experiment.title}
-              </option>
-            ))}
-          </select>
-        </label>
-        <Field defaultValue={decision.content} name="content" label="Reasoning (Markdown)" placeholder="Why this decision?" markdown textarea required />
+      <form className="form editor-form" key={decision.id} onSubmit={(event) => onSubmit(event, decision.id)}>
+        <EditorSection title="Decision record" description="Update the choice and its reasoning.">
+          <Field defaultValue={decision.title} name="title" label="Title" placeholder="Decision title" required />
+          <label className="field">
+            <span>Decision type</span>
+            <select name="decisionType" defaultValue={decision.decisionType}>
+              {decisionTypes.map((type) => (
+                <option key={type}>{type}</option>
+              ))}
+            </select>
+          </label>
+          <label className="field">
+            <span>Experiment</span>
+            <select name="experimentId" defaultValue={decision.experimentId ?? ""}>
+              <option value="">No specific experiment</option>
+              {experiments.map((experiment) => (
+                <option key={experiment.id} value={experiment.id}>
+                  {experiment.title}
+                </option>
+              ))}
+            </select>
+          </label>
+          <Field defaultValue={decision.content} name="content" label="Reasoning (Markdown)" placeholder="Why this decision?" markdown textarea required />
+        </EditorSection>
         <div className="form-actions">
           <button className="button" disabled={disabled} type="submit">
             {disabled ? "Updating..." : "Update decision"}

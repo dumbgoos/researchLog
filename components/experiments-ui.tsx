@@ -15,58 +15,69 @@ function CreateExperimentPanel({
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
   return (
-    <div className="card">
+    <div className="card editor-card" data-kind="experiment">
       <div className="card-title">
-        <h2>Add Experiment</h2>
+        <div>
+          <h2>Add Experiment</h2>
+          <p className="microcopy">Plan the question, then capture enough run context to make the result reproducible.</p>
+        </div>
       </div>
-      <form className="form" onSubmit={onSubmit}>
-        <label className="field">
-          <span>Idea</span>
-          <select name="ideaId" disabled={ideas.length === 0}>
-            {ideas.map((idea) => (
-              <option key={idea.id} value={idea.id}>
-                {idea.title}
-              </option>
-            ))}
-          </select>
-        </label>
-        <Field name="title" label="Title" placeholder="e.g. Baseline reproduction" required />
-        <Field name="objective" label="Objective" placeholder="What should this run answer?" textarea />
-        <div className="form-pair">
-          <Field name="experimentType" label="Type" placeholder="Ablation" />
+      <form className="form editor-form" onSubmit={onSubmit}>
+        <EditorSection title="Intent" description="Connect the run to a research question.">
           <label className="field">
-            <span>Status</span>
-            <select name="status" defaultValue="Planned">
-              {experimentStatuses.map((status) => (
-                <option key={status}>{status}</option>
+            <span>Idea</span>
+            <select name="ideaId" disabled={ideas.length === 0}>
+              {ideas.map((idea) => (
+                <option key={idea.id} value={idea.id}>
+                  {idea.title}
+                </option>
               ))}
             </select>
           </label>
-        </div>
-        <div className="form-pair">
-          <Field name="modelName" label="Model" placeholder="model name" />
-          <Field name="datasetName" label="Dataset" placeholder="dataset name" />
-        </div>
-        <Field name="methodChanges" label="Method changes (Markdown)" placeholder="What changed from the previous run?" markdown textarea />
-        <div className="form-pair">
-          <Field name="datasetVersion" label="Dataset version" placeholder="v1, split hash, date" />
-          <Field name="runtimeEnv" label="Runtime env" placeholder="server, conda env, docker image" />
-        </div>
-        <Field name="configJson" label="Config JSON" placeholder="{ }" defaultValue="{}" textarea />
-        <div className="form-pair">
-          <Field name="branchName" label="Branch" placeholder="main" />
-          <Field name="commitId" label="Commit" placeholder="git commit id" />
-        </div>
-        <Field name="runCommand" label="Run command" placeholder="python train.py ..." textarea />
-        <div className="form-pair">
-          <Field name="wandbUrl" label="W&B URL" placeholder="https://wandb.ai/..." />
-          <Field name="logPath" label="Log path" placeholder="logs/run.log" />
-        </div>
-        <Field name="ckptPath" label="Checkpoint path" placeholder="checkpoints/run.pt" />
-        <Field name="resultMetricsJson" label="Metrics JSON" placeholder="{ }" defaultValue="{}" textarea />
-        <Field name="resultSummary" label="Result summary" placeholder="What happened?" textarea />
-        <Field name="analysis" label="Analysis (Markdown)" placeholder="Why did it happen?" markdown textarea />
-        <Field name="nextSteps" label="Next steps (Markdown)" placeholder="What should happen next?" markdown textarea />
+          <Field name="title" label="Title" placeholder="e.g. Baseline reproduction" required />
+          <Field name="objective" label="Objective" placeholder="What should this run answer?" textarea />
+          <div className="form-pair">
+            <Field name="experimentType" label="Type" placeholder="Ablation" />
+            <label className="field">
+              <span>Status</span>
+              <select name="status" defaultValue="Planned">
+                {experimentStatuses.map((status) => (
+                  <option key={status}>{status}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </EditorSection>
+        <EditorSection title="Method" description="What changed, and what data/model context matters?">
+          <div className="form-pair">
+            <Field name="modelName" label="Model" placeholder="model name" />
+            <Field name="datasetName" label="Dataset" placeholder="dataset name" />
+          </div>
+          <Field name="methodChanges" label="Method changes (Markdown)" placeholder="What changed from the previous run?" markdown textarea />
+          <div className="form-pair">
+            <Field name="datasetVersion" label="Dataset version" placeholder="v1, split hash, date" />
+            <Field name="runtimeEnv" label="Runtime env" placeholder="server, conda env, docker image" />
+          </div>
+          <Field name="configJson" label="Config JSON" placeholder="{ }" defaultValue="{}" textarea />
+        </EditorSection>
+        <EditorSection title="Run" description="Enough detail to reproduce or find the run later.">
+          <div className="form-pair">
+            <Field name="branchName" label="Branch" placeholder="main" />
+            <Field name="commitId" label="Commit" placeholder="git commit id" />
+          </div>
+          <Field name="runCommand" label="Run command" placeholder="python train.py ..." textarea />
+          <div className="form-pair">
+            <Field name="wandbUrl" label="W&B URL" placeholder="https://wandb.ai/..." />
+            <Field name="logPath" label="Log path" placeholder="logs/run.log" />
+          </div>
+          <Field name="ckptPath" label="Checkpoint path" placeholder="checkpoints/run.pt" />
+        </EditorSection>
+        <EditorSection title="Results" description="Record what happened before interpretation drifts.">
+          <Field name="resultMetricsJson" label="Metrics JSON" placeholder="{ }" defaultValue="{}" textarea />
+          <Field name="resultSummary" label="Result summary" placeholder="What happened?" textarea />
+          <Field name="analysis" label="Analysis (Markdown)" placeholder="Why did it happen?" markdown textarea />
+          <Field name="nextSteps" label="Next steps (Markdown)" placeholder="What should happen next?" markdown textarea />
+        </EditorSection>
         <div className="form-actions">
           <button className="button" disabled={disabled} type="submit">
             {disabled ? "Saving..." : "Save experiment"}
@@ -93,7 +104,7 @@ function ExperimentDetailPanel({
   onSubmit: (event: FormEvent<HTMLFormElement>, id: string) => void;
 }) {
   return (
-    <div className="card detail-card">
+    <div className="card detail-card editor-card" data-kind="experiment">
       <div className="card-title">
         <div>
           <h2>Experiment Detail</h2>
@@ -104,7 +115,7 @@ function ExperimentDetailPanel({
         </button>
       </div>
       <form className="form editor-form" key={experiment.id} onSubmit={(event) => onSubmit(event, experiment.id)}>
-        <EditorSection title="Context">
+        <EditorSection title="Context" description="The research question and run state.">
           <Field defaultValue={experiment.title} name="title" label="Title" placeholder="Experiment title" required />
           <Field defaultValue={experiment.objective} name="objective" label="Objective" placeholder="Research question" textarea />
           <div className="form-pair">
@@ -119,7 +130,7 @@ function ExperimentDetailPanel({
             </label>
           </div>
         </EditorSection>
-        <EditorSection title="Method">
+        <EditorSection title="Method" description="Model, data, and methodological delta.">
           <div className="form-pair">
             <Field defaultValue={experiment.modelName} name="modelName" label="Model" placeholder="model name" />
             <Field defaultValue={experiment.datasetName} name="datasetName" label="Dataset" placeholder="Dataset name" />
@@ -131,7 +142,7 @@ function ExperimentDetailPanel({
           <Field defaultValue={experiment.methodChanges} name="methodChanges" label="Method changes (Markdown)" placeholder="Changes from previous runs" markdown textarea />
           <Field defaultValue={experiment.configJson} name="configJson" label="Config JSON" placeholder="{ }" textarea />
         </EditorSection>
-        <EditorSection title="Run">
+        <EditorSection title="Run" description="Asset and execution context.">
           <CheckboxGroup
             label="Linked assets"
             name="linkedAssetIds"
@@ -149,7 +160,7 @@ function ExperimentDetailPanel({
           </div>
           <Field defaultValue={experiment.ckptPath} name="ckptPath" label="Checkpoint path" placeholder="checkpoints/run.pt" />
         </EditorSection>
-        <EditorSection title="Results">
+        <EditorSection title="Results" description="Outcome, interpretation, and follow-up.">
           <Field defaultValue={experiment.resultMetricsJson} name="resultMetricsJson" label="Metrics JSON" placeholder="{ }" textarea />
           <Field defaultValue={experiment.resultSummary} name="resultSummary" label="Result summary" placeholder="What happened?" textarea />
           <Field defaultValue={experiment.analysis} name="analysis" label="Analysis (Markdown)" placeholder="Why did it happen?" markdown textarea />

@@ -640,6 +640,22 @@ h1 {
   gap: 12px;
 }
 
+.editor-card {
+  overflow: hidden;
+}
+
+.editor-card[data-kind="idea"] {
+  border-top: 3px solid #8bb8f8;
+}
+
+.editor-card[data-kind="experiment"] {
+  border-top: 3px solid #8ac7a4;
+}
+
+.editor-card[data-kind="decision"] {
+  border-top: 3px solid #e1bd73;
+}
+
 .editor-form {
   background: #fbfcfd;
   border: 1px solid var(--line);
@@ -660,11 +676,20 @@ h1 {
 .editor-section-title {
   align-items: center;
   color: var(--muted);
-  display: flex;
+  display: grid;
+  gap: 4px;
   font-size: 0.76rem;
   font-weight: 800;
-  justify-content: space-between;
   text-transform: uppercase;
+}
+
+.editor-section-title p {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.45;
+  margin: 0;
+  text-transform: none;
 }
 
 .form-pair {
@@ -684,6 +709,12 @@ h1 {
   font-weight: 800;
 }
 
+.field small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
 .field input,
 .field select,
 .field textarea {
@@ -701,6 +732,14 @@ h1 {
   resize: vertical;
   min-height: 96px;
   line-height: 1.55;
+}
+
+.editor-form .field textarea {
+  min-height: 116px;
+}
+
+.editor-form .markdown-editor textarea {
+  min-height: 138px;
 }
 
 .markdown-editor {
@@ -760,8 +799,12 @@ h1 {
 }
 
 .form-actions {
+  background: rgba(251, 252, 253, 0.92);
+  border: 1px solid var(--line);
+  border-radius: 8px;
   display: flex;
   justify-content: flex-end;
+  padding: 10px;
 }
 
 .timeline {
