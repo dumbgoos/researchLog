@@ -49,6 +49,7 @@ model Experiment {
   ckptPath          String        @default("")
   resultMetricsJson String        @default("{}")
   resultSummary     String
+  resultArtifactsJson String      @default("[]")
   analysis          String        @default("")
   nextSteps         String        @default("")
   createdAt         DateTime      @default(now())

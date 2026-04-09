@@ -3,7 +3,15 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { CheckboxGroup, EditorSection, Field, FormStatusNote, MarkdownPreview } from "@/components/form-controls";
+import {
+  CheckboxGroup,
+  EditorSection,
+  ExperimentResultArtifactsPreview,
+  Field,
+  FormStatusNote,
+  MarkdownPreview,
+  ResultArtifactsField
+} from "@/components/form-controls";
 import { decisionTypes, experimentStatuses, ideaStatuses } from "@/lib/constants";
 import type { DecisionLog, Experiment, Idea, VaultAsset } from "@/lib/types";
 
@@ -298,6 +306,7 @@ function ExperimentDetailPage({
         ckptPath: String(form.get("ckptPath") ?? "").trim(),
         resultMetricsJson: String(form.get("resultMetricsJson") ?? "").trim() || "{}",
         resultSummary: String(form.get("resultSummary") ?? "").trim(),
+        resultArtifactsJson: String(form.get("resultArtifactsJson") ?? "[]").trim() || "[]",
         analysis: String(form.get("analysis") ?? "").trim(),
         nextSteps: String(form.get("nextSteps") ?? "").trim()
       })
@@ -399,6 +408,7 @@ function ExperimentDetailPage({
               <EditorSection collapsible defaultOpen={false} title="Results" description="Outcome, interpretation, and follow-up.">
                 <Field defaultValue={experiment.resultMetricsJson} name="resultMetricsJson" label="Metrics JSON" placeholder="{ }" textarea />
                 <Field defaultValue={experiment.resultSummary} name="resultSummary" label="Result summary" placeholder="What happened?" textarea markdown />
+                <ResultArtifactsField defaultValue={experiment.resultArtifacts} />
                 <Field defaultValue={experiment.analysis} name="analysis" label="Analysis (Markdown)" placeholder="Why did it happen?" markdown textarea />
                 <Field defaultValue={experiment.nextSteps} name="nextSteps" label="Next steps (Markdown)" placeholder="What should happen next?" markdown textarea />
               </EditorSection>
@@ -414,6 +424,7 @@ function ExperimentDetailPage({
               </DocumentSection>
               <DocumentSection label="Results" title="What happened">
                 <MarkdownPreview value={experiment.resultSummary} />
+                <ExperimentResultArtifactsPreview artifacts={experiment.resultArtifacts} />
               </DocumentSection>
               <DocumentSection label="Analysis" title="Interpretation">
                 <MarkdownPreview value={experiment.analysis} />

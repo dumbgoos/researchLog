@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
+import type { ExperimentResultArtifact } from "@/lib/types";
 
 function ConfirmDeleteButton({
   disabled,
@@ -347,6 +348,113 @@ function EditorSection({
   );
 }
 
+function ResultArtifactsField({
+  defaultValue,
+  name = "resultArtifactsJson"
+}: {
+  defaultValue?: ExperimentResultArtifact[];
+  name?: string;
+}) {
+  const [artifacts, setArtifacts] = useState<ExperimentResultArtifact[]>(defaultValue ?? []);
+
+  async function handleFileUpload(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+    if (files.length === 0) {
+      return;
+    }
+
+    const uploaded = await Promise.all(files.map(readArtifactFile));
+    setArtifacts((current) => [...current, ...uploaded.filter((artifact): artifact is ExperimentResultArtifact => Boolean(artifact))]);
+    event.target.value = "";
+  }
+
+  function updateArtifact(id: string, patch: Partial<ExperimentResultArtifact>) {
+    setArtifacts((current) => current.map((artifact) => (artifact.id === id ? { ...artifact, ...patch } : artifact)));
+  }
+
+  return (
+    <section className="result-artifacts-field">
+      <input name={name} type="hidden" value={JSON.stringify(artifacts)} />
+      <div className="editor-section-title">
+        <div>
+          <span>Result attachments</span>
+          <p>Keep markdown notes, figures, and tables close to the experiment result.</p>
+        </div>
+        <button
+          className="secondary-button compact-button"
+          onClick={() =>
+            setArtifacts((current) => [
+              ...current,
+              {
+                id: `artifact-${crypto.randomUUID()}`,
+                title: `Result note ${current.length + 1}`,
+                kind: "markdown",
+                content: "### Result note\n- what changed\n- what to keep"
+              }
+            ])
+          }
+          type="button"
+        >
+          Add note
+        </button>
+      </div>
+      <label className="field">
+        <span>Upload result files</span>
+        <small>Supported: Markdown, text, CSV, TSV, and images.</small>
+        <input accept=".md,.markdown,.txt,.csv,.tsv,image/*" multiple onChange={handleFileUpload} type="file" />
+      </label>
+      {artifacts.length === 0 ? (
+        <p className="empty-state">No result attachments yet. Add a markdown note or upload an image/table.</p>
+      ) : (
+        <div className="result-artifact-list">
+          {artifacts.map((artifact) => (
+            <article className="result-artifact-card" key={artifact.id}>
+              <div className="card-title compact-card-title">
+                <div>
+                  <h3>{artifact.title}</h3>
+                  <p className="microcopy">{artifact.fileName ?? artifact.kind}</p>
+                </div>
+                <button
+                  className="danger-button compact-button"
+                  onClick={() => setArtifacts((current) => current.filter((item) => item.id !== artifact.id))}
+                  type="button"
+                >
+                  Remove
+                </button>
+              </div>
+              <div className="form-pair">
+                <label className="field">
+                  <span>Artifact title</span>
+                  <input onChange={(event) => updateArtifact(artifact.id, { title: event.target.value })} value={artifact.title} />
+                </label>
+                <label className="field">
+                  <span>Kind</span>
+                  <select onChange={(event) => updateArtifact(artifact.id, { kind: event.target.value as ExperimentResultArtifact["kind"] })} value={artifact.kind}>
+                    <option value="markdown">Markdown</option>
+                    <option value="image">Image</option>
+                    <option value="table">Table</option>
+                  </select>
+                </label>
+              </div>
+              {artifact.kind === "image" ? (
+                <div className="result-image-preview">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img alt={artifact.title} src={artifact.content} />
+                </div>
+              ) : (
+                <label className="field">
+                  <span>{artifact.kind === "table" ? "Table content" : "Markdown content"}</span>
+                  <textarea onChange={(event) => updateArtifact(artifact.id, { content: event.target.value })} value={artifact.content} />
+                </label>
+              )}
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 
 function MarkdownPreview({ title, value }: { title?: string; value: string }) {
   const blocks = value
@@ -360,7 +468,7 @@ function MarkdownPreview({ title, value }: { title?: string; value: string }) {
 
   return (
     <div className="markdown-preview">
-      <h3>{title}</h3>
+      {title && <h3>{title}</h3>}
       {blocks.map((line, index) => {
         if (line.startsWith("### ")) {
           return <h4 key={index}>{line.slice(4)}</h4>;
@@ -384,4 +492,109 @@ function MarkdownPreview({ title, value }: { title?: string; value: string }) {
   );
 }
 
-export { CheckboxGroup, ConfirmDeleteButton, EditorSection, EmptyState, Field, FormStatusNote, MarkdownPreview, PopoutButton, TextExcerpt };
+function ExperimentResultArtifactsPreview({ artifacts }: { artifacts: ExperimentResultArtifact[] }) {
+  if (artifacts.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="result-artifact-preview-list">
+      {artifacts.map((artifact) => (
+        <section className="markdown-preview result-artifact-preview" key={artifact.id}>
+          <h3>{artifact.title}</h3>
+          {artifact.kind === "image" ? (
+            <div className="result-image-preview">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img alt={artifact.title} src={artifact.content} />
+            </div>
+          ) : artifact.kind === "table" ? (
+            <TableArtifactPreview content={artifact.content} />
+          ) : (
+            <MarkdownPreview value={artifact.content} />
+          )}
+        </section>
+      ))}
+    </div>
+  );
+}
+
+function TableArtifactPreview({ content }: { content: string }) {
+  const rows = content
+    .split(/\r?\n/)
+    .map((row) => row.trim())
+    .filter(Boolean)
+    .map((row) => row.split(row.includes("\t") ? "\t" : ","));
+
+  if (rows.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="table-artifact-wrap">
+      <table className="artifact-table">
+        <tbody>
+          {rows.map((row, rowIndex) => (
+            <tr key={`${rowIndex}-${row.join("|")}`}>
+              {row.map((cell, cellIndex) =>
+                rowIndex === 0 ? <th key={`${rowIndex}-${cellIndex}`}>{cell}</th> : <td key={`${rowIndex}-${cellIndex}`}>{cell}</td>
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+async function readArtifactFile(file: File): Promise<ExperimentResultArtifact | null> {
+  const content = await readFileContent(file);
+
+  if (!content) {
+    return null;
+  }
+
+  const lowerName = file.name.toLowerCase();
+  const kind: ExperimentResultArtifact["kind"] = file.type.startsWith("image/")
+    ? "image"
+    : lowerName.endsWith(".csv") || lowerName.endsWith(".tsv")
+      ? "table"
+      : "markdown";
+
+  return {
+    id: `artifact-${crypto.randomUUID()}`,
+    title: file.name.replace(/\.[^.]+$/, ""),
+    kind,
+    content,
+    fileName: file.name,
+    mimeType: file.type || undefined
+  };
+}
+
+function readFileContent(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error);
+    reader.onload = () => resolve(String(reader.result ?? ""));
+
+    if (file.type.startsWith("image/")) {
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    reader.readAsText(file);
+  });
+}
+
+export {
+  CheckboxGroup,
+  ConfirmDeleteButton,
+  EditorSection,
+  EmptyState,
+  ExperimentResultArtifactsPreview,
+  Field,
+  FormStatusNote,
+  MarkdownPreview,
+  PopoutButton,
+  ResultArtifactsField,
+  TextExcerpt
+};

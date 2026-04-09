@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS Experiment (
   ckptPath TEXT NOT NULL DEFAULT '',
   resultMetricsJson TEXT NOT NULL DEFAULT '{}',
   resultSummary TEXT NOT NULL,
+  resultArtifactsJson TEXT NOT NULL DEFAULT '[]',
   analysis TEXT NOT NULL DEFAULT '',
   nextSteps TEXT NOT NULL DEFAULT '',
   createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

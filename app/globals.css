@@ -1115,6 +1115,68 @@ h1 {
   box-shadow: 0 -6px 18px rgba(16, 24, 40, 0.04);
 }
 
+.result-artifacts-field,
+.result-artifact-list,
+.result-artifact-preview-list,
+.weekly-digest {
+  display: grid;
+  gap: 12px;
+}
+
+.result-artifact-card,
+.weekly-card {
+  background: #fbfcfd;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.compact-card-title {
+  margin-bottom: 12px;
+}
+
+.compact-card-title h3 {
+  font-size: 0.92rem;
+  margin-bottom: 4px;
+}
+
+.result-image-preview {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.result-image-preview img {
+  display: block;
+  max-height: 320px;
+  object-fit: contain;
+  width: 100%;
+}
+
+.table-artifact-wrap {
+  overflow-x: auto;
+}
+
+.artifact-table {
+  border-collapse: collapse;
+  min-width: 100%;
+  width: max-content;
+}
+
+.artifact-table th,
+.artifact-table td {
+  border: 1px solid var(--line);
+  font-size: 0.82rem;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.artifact-table th {
+  background: #f6f8fa;
+  font-weight: 760;
+}
+
 .detail-card .form-actions {
   background: transparent;
   backdrop-filter: none;
@@ -1153,6 +1215,66 @@ h1 {
   position: relative;
   display: grid;
   gap: 12px;
+}
+
+.heatmap-card {
+  overflow: hidden;
+}
+
+.heatmap-grid {
+  display: grid;
+  gap: 8px 6px;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+.heatmap-cell-wrap {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+}
+
+.heatmap-cell-wrap span {
+  color: var(--muted);
+  font-size: 0.66rem;
+  opacity: 0;
+  position: absolute;
+  pointer-events: none;
+}
+
+.heatmap-cell {
+  border-radius: 4px;
+  height: 16px;
+  width: 100%;
+  min-width: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  background: #eef2f7;
+}
+
+.heatmap-cell.level-1 {
+  background: #dce9ff;
+}
+
+.heatmap-cell.level-2 {
+  background: #9fc0f7;
+}
+
+.heatmap-cell.level-3 {
+  background: #6da4f2;
+}
+
+.heatmap-cell.level-4 {
+  background: #2d6cdf;
+}
+
+.heatmap-legend {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-top: 12px;
+  font-size: 0.74rem;
+  font-weight: 700;
 }
 
 .timeline-item {

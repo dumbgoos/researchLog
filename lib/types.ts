@@ -47,10 +47,20 @@ export type Experiment = {
   ckptPath: string;
   resultMetricsJson: string;
   resultSummary: string;
+  resultArtifacts: ExperimentResultArtifact[];
   analysis: string;
   nextSteps: string;
   createdAt: string;
   updatedAt: string;
+};
+
+export type ExperimentResultArtifact = {
+  id: string;
+  title: string;
+  kind: "markdown" | "image" | "table";
+  content: string;
+  fileName?: string;
+  mimeType?: string;
 };
 
 export type DecisionLog = {

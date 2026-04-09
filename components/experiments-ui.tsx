@@ -8,10 +8,12 @@ import {
   ConfirmDeleteButton,
   EditorSection,
   EmptyState,
+  ExperimentResultArtifactsPreview,
   Field,
   FormStatusNote,
   MarkdownPreview,
   PopoutButton,
+  ResultArtifactsField,
   TextExcerpt
 } from "@/components/form-controls";
 
@@ -87,6 +89,7 @@ function CreateExperimentPanel({
         <EditorSection collapsible defaultOpen={false} title="Results" description="Record what happened before interpretation drifts.">
           <Field name="resultMetricsJson" label="Metrics JSON" placeholder="{ }" defaultValue="{}" textarea />
           <Field name="resultSummary" label="Result summary" placeholder="What happened?" textarea />
+          <ResultArtifactsField />
           <Field name="analysis" label="Analysis (Markdown)" placeholder="Why did it happen?" markdown textarea />
           <Field name="nextSteps" label="Next steps (Markdown)" placeholder="What should happen next?" markdown textarea />
         </EditorSection>
@@ -179,6 +182,7 @@ function ExperimentDetailPanel({
         <EditorSection collapsible defaultOpen={false} title="Results" description="Outcome, interpretation, and follow-up.">
           <Field defaultValue={experiment.resultMetricsJson} name="resultMetricsJson" label="Metrics JSON" placeholder="{ }" textarea />
           <Field defaultValue={experiment.resultSummary} name="resultSummary" label="Result summary" placeholder="What happened?" textarea />
+          <ResultArtifactsField defaultValue={experiment.resultArtifacts} />
           <Field defaultValue={experiment.analysis} name="analysis" label="Analysis (Markdown)" placeholder="Why did it happen?" markdown textarea />
           <Field defaultValue={experiment.nextSteps} name="nextSteps" label="Next steps (Markdown)" placeholder="What should happen next?" markdown textarea />
         </EditorSection>
@@ -190,6 +194,7 @@ function ExperimentDetailPanel({
         </div>
       </form>
       <div className="preview-stack">
+        <ExperimentResultArtifactsPreview artifacts={experiment.resultArtifacts} />
         <MarkdownPreview title="Method preview" value={experiment.methodChanges} />
         <MarkdownPreview title="Analysis preview" value={experiment.analysis} />
         <MarkdownPreview title="Next steps preview" value={experiment.nextSteps} />
