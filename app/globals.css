@@ -519,6 +519,14 @@ h1 {
   margin-bottom: 16px;
 }
 
+.title-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
 .card-title h2,
 .card-title h3 {
   margin-bottom: 0;
@@ -1124,11 +1132,18 @@ h1 {
 }
 
 .result-artifact-card,
-.weekly-card {
+.weekly-card,
+.activity-detail-card {
   background: #fbfcfd;
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 12px;
+}
+
+.weekly-card.is-selected,
+.activity-detail-card {
+  border-color: #c7d8f6;
+  box-shadow: 0 10px 28px rgba(45, 108, 223, 0.08);
 }
 
 .compact-card-title {
@@ -1242,12 +1257,15 @@ h1 {
 }
 
 .heatmap-cell {
+  appearance: none;
   border-radius: 4px;
   height: 16px;
   width: 100%;
   min-width: 16px;
   border: 1px solid rgba(0, 0, 0, 0.04);
   background: #eef2f7;
+  cursor: pointer;
+  padding: 0;
 }
 
 .heatmap-cell.level-1 {
@@ -1264,6 +1282,10 @@ h1 {
 
 .heatmap-cell.level-4 {
   background: #2d6cdf;
+}
+
+.heatmap-cell.is-selected {
+  box-shadow: 0 0 0 2px rgba(23, 23, 23, 0.18);
 }
 
 .heatmap-legend {
