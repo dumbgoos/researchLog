@@ -4,7 +4,7 @@ import type { FormEvent } from "react";
 import { vaultAssetTypes } from "@/lib/constants";
 import { formatMetadataLines } from "@/lib/form-utils";
 import type { VaultAsset, VaultAuditLog } from "@/lib/types";
-import { ConfirmDeleteButton, EmptyState } from "@/components/form-controls";
+import { ConfirmDeleteButton, EmptyState, FormStatusNote } from "@/components/form-controls";
 
 function Field({
   name,
@@ -35,10 +35,12 @@ function Field({
 
 function CreateVaultAssetPanel({
   disabled,
-  onSubmit
+  onSubmit,
+  statusMessage
 }: {
   disabled: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  statusMessage?: string;
 }) {
   return (
     <div className="card detail-card">
@@ -67,6 +69,7 @@ function CreateVaultAssetPanel({
           Do not store SSH private keys or root passwords. Server entries should use host metadata and aliases only.
         </p>
         <div className="form-actions">
+          {statusMessage && <FormStatusNote tone="success">{statusMessage}</FormStatusNote>}
           <button className="button" disabled={disabled} type="submit">
             {disabled ? "Saving..." : "Save asset"}
           </button>
@@ -176,7 +179,8 @@ function VaultAssetDetailPanel({
   onClose,
   onDeleteAsset,
   onSubmit,
-  revealedSecret
+  revealedSecret,
+  statusMessage
 }: {
   asset: VaultAsset;
   disabled: boolean;
@@ -185,6 +189,7 @@ function VaultAssetDetailPanel({
   onDeleteAsset: (id: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>, id: string) => void;
   revealedSecret: string | null;
+  statusMessage?: string;
 }) {
   return (
     <div className="card detail-card">
@@ -227,7 +232,8 @@ function VaultAssetDetailPanel({
           textarea
         />
         {asset.maskedPreview && <p className="secret-preview">{revealedSecret ?? asset.maskedPreview}</p>}
-        <div className="row-actions">
+        <div className="form-actions">
+          {statusMessage && <FormStatusNote tone="success">{statusMessage}</FormStatusNote>}
           {asset.maskedPreview && (
             <>
               <button className="secondary-button compact-button" disabled={disabled} onClick={() => onAccessSecret(asset.id, "reveal")} type="button">

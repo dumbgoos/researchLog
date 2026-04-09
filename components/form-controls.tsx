@@ -34,6 +34,16 @@ function ConfirmDeleteButton({
   );
 }
 
+function FormStatusNote({
+  tone = "neutral",
+  children
+}: {
+  tone?: "neutral" | "success";
+  children: React.ReactNode;
+}) {
+  return <span className={`form-status-note ${tone === "success" ? "is-success" : ""}`}>{children}</span>;
+}
+
 function Field({
   name,
   label,
@@ -247,4 +257,4 @@ function MarkdownPreview({ title, value }: { title: string; value: string }) {
   );
 }
 
-export { CheckboxGroup, ConfirmDeleteButton, EditorSection, EmptyState, Field, MarkdownPreview, TextExcerpt };
+export { CheckboxGroup, ConfirmDeleteButton, EditorSection, EmptyState, Field, FormStatusNote, MarkdownPreview, TextExcerpt };

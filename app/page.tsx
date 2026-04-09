@@ -74,6 +74,7 @@ export default function Home() {
   const [relationMinConfidence, setRelationMinConfidence] = useState(0);
   const [graphViewMode, setGraphViewMode] = useState<"Network" | "Evolution" | "Clusters">("Network");
   const [selectedMapIdeaId, setSelectedMapIdeaId] = useState<string | null>(null);
+  const [panelFeedback, setPanelFeedback] = useState<Record<string, string>>({});
 
   const activeIdeas = ideas.filter((idea) => !["Archived", "Paused"].includes(idea.status));
   const runningExperiments = experiments.filter((experiment) => experiment.status === "Running");
@@ -94,6 +95,21 @@ export default function Home() {
     const timer = window.setTimeout(() => setNotice(null), 4200);
     return () => window.clearTimeout(timer);
   }, [notice]);
+
+  function showPanelFeedback(key: string, message: string) {
+    setPanelFeedback((current) => ({ ...current, [key]: message }));
+    window.setTimeout(() => {
+      setPanelFeedback((current) => {
+        if (!(key in current)) {
+          return current;
+        }
+
+        const next = { ...current };
+        delete next[key];
+        return next;
+      });
+    }, 2600);
+  }
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -268,6 +284,7 @@ export default function Home() {
 
     formElement.reset();
     setNotice("Idea saved.");
+    showPanelFeedback("idea-create", "Saved. Ready for the next idea.");
     await loadWorkspace();
     setIsSaving(false);
   }
@@ -321,6 +338,7 @@ export default function Home() {
 
     formElement.reset();
     setNotice("Experiment saved.");
+    showPanelFeedback("experiment-create", "Saved. Ready for another run.");
     await loadWorkspace();
     setIsSaving(false);
   }
@@ -358,6 +376,7 @@ export default function Home() {
 
     formElement.reset();
     setNotice("Decision saved.");
+    showPanelFeedback("decision-create", "Saved. Decision log updated.");
     await loadWorkspace();
     setIsSaving(false);
   }
@@ -392,6 +411,7 @@ export default function Home() {
 
     formElement.reset();
     setNotice("Vault asset saved.");
+    showPanelFeedback("vault-create", "Saved. Asset is encrypted and available.");
     await loadWorkspace();
     setIsSaving(false);
   }
@@ -513,6 +533,7 @@ export default function Home() {
     }
 
     setNotice("Changes saved.");
+    showPanelFeedback(url, "Saved just now.");
     await loadWorkspace();
     setIsSaving(false);
   }
@@ -620,6 +641,7 @@ export default function Home() {
 
     setAISettings((await response.json()) as AIAnalysisSettings);
     setNotice("AI settings saved.");
+    showPanelFeedback("ai-settings", "Saved. The next graph run will use this setup.");
     setIsSaving(false);
   }
 
@@ -811,9 +833,10 @@ export default function Home() {
                   idea={selectedIdea}
                   onClose={() => setSelectedIdeaId(null)}
                   onSubmit={updateIdeaDetails}
+                  statusMessage={panelFeedback[`/api/ideas/${encodeURIComponent(selectedIdea.id)}`]}
                 />
               )}
-              <CreateIdeaPanel disabled={isSaving} onSubmit={createIdea} />
+              <CreateIdeaPanel disabled={isSaving} onSubmit={createIdea} statusMessage={panelFeedback["idea-create"]} />
             </div>
           </section>
         )}
@@ -873,9 +896,15 @@ export default function Home() {
                   vaultAssets={vaultAssets}
                   onClose={() => setSelectedExperimentId(null)}
                   onSubmit={updateExperimentDetails}
+                  statusMessage={panelFeedback[`/api/experiments/${encodeURIComponent(selectedExperiment.id)}`]}
                 />
               )}
-              <CreateExperimentPanel disabled={isSaving || ideas.length === 0} ideas={ideas} onSubmit={createExperiment} />
+              <CreateExperimentPanel
+                disabled={isSaving || ideas.length === 0}
+                ideas={ideas}
+                onSubmit={createExperiment}
+                statusMessage={panelFeedback["experiment-create"]}
+              />
             </div>
           </section>
         )}
@@ -916,6 +945,7 @@ export default function Home() {
                   ideaTitle={ideas.find((idea) => idea.id === selectedDecision.ideaId)?.title ?? "Unlinked idea"}
                   onClose={() => setSelectedDecisionId(null)}
                   onSubmit={updateDecisionDetails}
+                  statusMessage={panelFeedback[`/api/decisions/${encodeURIComponent(selectedDecision.id)}`]}
                 />
               )}
               <CreateDecisionPanel
@@ -923,6 +953,7 @@ export default function Home() {
                 experiments={experiments}
                 ideas={ideas}
                 onSubmit={createDecision}
+                statusMessage={panelFeedback["decision-create"]}
               />
             </div>
           </section>
@@ -961,9 +992,10 @@ export default function Home() {
                   onDeleteAsset={(id) => deleteRecord(`/api/vault/${encodeURIComponent(id)}`, "Could not delete vault asset.")}
                   onSubmit={updateVaultAssetDetails}
                   revealedSecret={revealedSecret?.assetId === selectedVaultAsset.id ? revealedSecret.value : null}
+                  statusMessage={panelFeedback[`/api/vault/${encodeURIComponent(selectedVaultAsset.id)}`]}
                 />
               )}
-              <CreateVaultAssetPanel disabled={isSaving} onSubmit={createVaultAsset} />
+              <CreateVaultAssetPanel disabled={isSaving} onSubmit={createVaultAsset} statusMessage={panelFeedback["vault-create"]} />
               <div className="card">
                 <div className="card-title">
                   <h2>Audit Trail</h2>
@@ -1059,7 +1091,12 @@ export default function Home() {
             </div>
             <div className="side-stack">
               <ResearchMapSummary ideas={ideas} map={researchMap} visibleRelations={filteredRelations.length} />
-              <AISettingsPanel disabled={isSaving} onSubmit={updateAISettings} settings={aiSettings} />
+              <AISettingsPanel
+                disabled={isSaving}
+                onSubmit={updateAISettings}
+                settings={aiSettings}
+                statusMessage={panelFeedback["ai-settings"]}
+              />
               {selectedRelation && (
                 <RelationDetailPanel
                   key={selectedRelation.id}

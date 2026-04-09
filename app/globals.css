@@ -389,6 +389,9 @@ h1 {
 .detail-card {
   border-color: var(--line-strong);
   box-shadow: var(--shadow);
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  overscroll-behavior: contain;
   position: sticky;
   top: 20px;
 }
@@ -763,6 +766,11 @@ h1 {
   overflow: hidden;
 }
 
+.detail-card.editor-card {
+  overflow: auto;
+  padding-bottom: 14px;
+}
+
 .editor-card[data-kind="idea"] {
   border-top: 3px solid #8bb8f8;
 }
@@ -927,13 +935,18 @@ h1 {
 }
 
 .form-actions {
-  background: rgba(251, 252, 253, 0.92);
+  background: rgba(251, 252, 253, 0.96);
+  backdrop-filter: blur(10px);
   border: 1px solid var(--line);
   border-radius: 8px;
   display: flex;
   gap: 10px;
   justify-content: flex-end;
   padding: 10px;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  box-shadow: 0 -6px 18px rgba(16, 24, 40, 0.04);
 }
 
 .form-actions:has(.button:disabled)::before {
@@ -943,6 +956,19 @@ h1 {
   font-size: 0.78rem;
   font-weight: 760;
   margin-right: auto;
+}
+
+.form-status-note {
+  align-self: center;
+  color: var(--muted);
+  font-size: 0.79rem;
+  font-weight: 680;
+  line-height: 1.4;
+  margin-right: auto;
+}
+
+.form-status-note.is-success {
+  color: var(--success);
 }
 
 .timeline {

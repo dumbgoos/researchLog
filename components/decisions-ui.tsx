@@ -3,18 +3,20 @@
 import type { FormEvent } from "react";
 import { decisionTypes } from "@/lib/constants";
 import type { DecisionLog, Experiment, Idea } from "@/lib/types";
-import { ConfirmDeleteButton, EditorSection, EmptyState, Field, MarkdownPreview, TextExcerpt } from "@/components/form-controls";
+import { ConfirmDeleteButton, EditorSection, EmptyState, Field, FormStatusNote, MarkdownPreview, TextExcerpt } from "@/components/form-controls";
 
 function CreateDecisionPanel({
   disabled,
   experiments,
   ideas,
-  onSubmit
+  onSubmit,
+  statusMessage
 }: {
   disabled: boolean;
   experiments: Experiment[];
   ideas: Idea[];
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  statusMessage?: string;
 }) {
   return (
     <div className="card editor-card" data-kind="decision">
@@ -61,6 +63,7 @@ function CreateDecisionPanel({
           <Field name="content" label="Reasoning (Markdown)" placeholder="Why are we making this move?" markdown textarea required />
         </EditorSection>
         <div className="form-actions">
+          {statusMessage && <FormStatusNote tone="success">{statusMessage}</FormStatusNote>}
           <button className="button" disabled={disabled} type="submit">
             {disabled ? "Saving..." : "Save decision"}
           </button>
@@ -76,7 +79,8 @@ function DecisionDetailPanel({
   experiments,
   ideaTitle,
   onClose,
-  onSubmit
+  onSubmit,
+  statusMessage
 }: {
   decision: DecisionLog;
   disabled: boolean;
@@ -84,6 +88,7 @@ function DecisionDetailPanel({
   ideaTitle: string;
   onClose: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>, id: string) => void;
+  statusMessage?: string;
 }) {
   return (
     <div className="card detail-card editor-card" data-kind="decision">
@@ -121,6 +126,7 @@ function DecisionDetailPanel({
           <Field defaultValue={decision.content} name="content" label="Reasoning (Markdown)" placeholder="Why this decision?" markdown textarea required />
         </EditorSection>
         <div className="form-actions">
+          {statusMessage && <FormStatusNote tone="success">{statusMessage}</FormStatusNote>}
           <button className="button" disabled={disabled} type="submit">
             {disabled ? "Updating..." : "Update decision"}
           </button>

@@ -9,6 +9,7 @@ import {
   EditorSection,
   EmptyState,
   Field,
+  FormStatusNote,
   MarkdownPreview,
   TextExcerpt
 } from "@/components/form-controls";
@@ -16,11 +17,13 @@ import {
 function CreateExperimentPanel({
   disabled,
   ideas,
-  onSubmit
+  onSubmit,
+  statusMessage
 }: {
   disabled: boolean;
   ideas: Idea[];
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  statusMessage?: string;
 }) {
   return (
     <div className="card editor-card" data-kind="experiment">
@@ -87,6 +90,7 @@ function CreateExperimentPanel({
           <Field name="nextSteps" label="Next steps (Markdown)" placeholder="What should happen next?" markdown textarea />
         </EditorSection>
         <div className="form-actions">
+          {statusMessage && <FormStatusNote tone="success">{statusMessage}</FormStatusNote>}
           <button className="button" disabled={disabled} type="submit">
             {disabled ? "Saving..." : "Save experiment"}
           </button>
@@ -102,7 +106,8 @@ function ExperimentDetailPanel({
   ideaTitle,
   vaultAssets,
   onClose,
-  onSubmit
+  onSubmit,
+  statusMessage
 }: {
   disabled: boolean;
   experiment: Experiment;
@@ -110,6 +115,7 @@ function ExperimentDetailPanel({
   vaultAssets: VaultAsset[];
   onClose: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>, id: string) => void;
+  statusMessage?: string;
 }) {
   return (
     <div className="card detail-card editor-card" data-kind="experiment">
@@ -175,6 +181,7 @@ function ExperimentDetailPanel({
           <Field defaultValue={experiment.nextSteps} name="nextSteps" label="Next steps (Markdown)" placeholder="What should happen next?" markdown textarea />
         </EditorSection>
         <div className="form-actions">
+          {statusMessage && <FormStatusNote tone="success">{statusMessage}</FormStatusNote>}
           <button className="button" disabled={disabled} type="submit">
             {disabled ? "Updating..." : "Update experiment"}
           </button>
