@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { Experiment, Idea, TimelineEvent } from "@/lib/types";
 import { EmptyState, TextExcerpt } from "@/components/form-controls";
 
@@ -143,6 +144,8 @@ function ActivityHeatmap({
   selectedDate?: string | null;
 }) {
   const cells = buildHeatmapCells(ideas, experiments);
+  const [hoveredDate, setHoveredDate] = useState<string | null>(null);
+  const activeCell = cells.find((cell) => cell.date === (hoveredDate ?? selectedDate)) ?? null;
 
   return (
     <div className="card heatmap-card">
@@ -158,13 +161,20 @@ function ActivityHeatmap({
           <div className="heatmap-cell-wrap" key={cell.date}>
             <button
               className={`heatmap-cell level-${Math.min(cell.count, 4)} ${selectedDate === cell.date ? "is-selected" : ""}`}
+              onBlur={() => setHoveredDate((current) => (current === cell.date ? null : current))}
               onClick={() => onSelectDate?.(selectedDate === cell.date ? null : cell.date)}
+              onFocus={() => setHoveredDate(cell.date)}
+              onMouseEnter={() => setHoveredDate(cell.date)}
+              onMouseLeave={() => setHoveredDate((current) => (current === cell.date ? null : current))}
               title={cell.label}
               type="button"
             />
             <span>{cell.label}</span>
           </div>
         ))}
+      </div>
+      <div className="heatmap-hoverline" aria-live="polite">
+        {activeCell ? activeCell.label : "Hover or click a day to inspect that moment in the research timeline."}
       </div>
       <div className="heatmap-legend">
         <span>Less</span>
@@ -348,7 +358,9 @@ function groupExperimentsByWeek(experiments: Experiment[], ideaById: Map<string,
     .map(([weekStart, weekExperiments]) => {
       const doneCount = weekExperiments.filter((experiment) => experiment.status === "Done").length;
       const runningCount = weekExperiments.filter((experiment) => experiment.status === "Running").length;
-      const topIdeas = Array.from(new Set(weekExperiments.map((experiment) => ideaById.get(experiment.ideaId)).filter(Boolean))).slice(0, 2);
+      const topIdeas = Array.from(
+        new Set(weekExperiments.map((experiment) => ideaById.get(experiment.ideaId)).filter(Boolean))
+      ).slice(0, 2);
 
       return {
         key: weekStart,

@@ -1131,6 +1131,24 @@ h1 {
   gap: 12px;
 }
 
+.artifact-dropzone {
+  background: #f8fafc;
+  border: 1px dashed #c7d2de;
+  border-radius: 8px;
+  padding: 12px;
+  transition: border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
+}
+
+.artifact-dropzone.is-dragging {
+  background: #eef6ff;
+  border-color: #8bb8f8;
+  box-shadow: 0 0 0 3px rgba(139, 184, 248, 0.18);
+}
+
+.artifact-dropzone input[type="file"] {
+  margin-top: 4px;
+}
+
 .result-artifact-card,
 .weekly-card,
 .activity-detail-card {
@@ -1297,6 +1315,14 @@ h1 {
   margin-top: 12px;
   font-size: 0.74rem;
   font-weight: 700;
+}
+
+.heatmap-hoverline {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  margin-top: 12px;
+  min-height: 22px;
 }
 
 .timeline-item {
@@ -1940,7 +1966,7 @@ h1 {
   color: #4f5864;
   font-size: 0.84rem;
   line-height: 1.5;
-  margin: 0;
+  content: "?";
   overflow-wrap: anywhere;
   padding: 10px 11px;
 }
@@ -1966,7 +1992,7 @@ h1 {
 }
 
 .preview-bullet::before {
-  content: "â€¢ ";
+  content: "â€?";
   color: var(--muted);
 }
 
