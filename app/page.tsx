@@ -18,7 +18,7 @@ import {
   ResearchMapSummary
 } from "@/components/research-map-ui";
 import { CreateVaultAssetPanel, VaultAssetDetailPanel, VaultAssetList, VaultAuditList, VaultSessionPanel } from "@/components/vault-ui";
-import { StatCard, TimelineList } from "@/components/workspace-ui";
+import { ActivityHeatmap, StatCard, TimelineList, WeeklyExperimentDigest } from "@/components/workspace-ui";
 import { decisionTypes, experimentStatuses, ideaStatuses, sections } from "@/lib/constants";
 import type { Section } from "@/lib/constants";
 import { parseMetadataLines } from "@/lib/form-utils";
@@ -375,6 +375,7 @@ export default function Home() {
         ckptPath: String(form.get("ckptPath") ?? "").trim(),
         resultMetricsJson: String(form.get("resultMetricsJson") ?? "").trim() || "{}",
         resultSummary: String(form.get("resultSummary") ?? "").trim() || "Pending analysis.",
+        resultArtifactsJson: String(form.get("resultArtifactsJson") ?? "[]").trim() || "[]",
         analysis: String(form.get("analysis") ?? "").trim(),
         nextSteps: String(form.get("nextSteps") ?? "").trim()
       })
@@ -524,6 +525,7 @@ export default function Home() {
         ckptPath: String(form.get("ckptPath") ?? "").trim(),
         resultMetricsJson: String(form.get("resultMetricsJson") ?? "").trim() || "{}",
         resultSummary: String(form.get("resultSummary") ?? "").trim(),
+        resultArtifactsJson: String(form.get("resultArtifactsJson") ?? "[]").trim() || "[]",
         analysis: String(form.get("analysis") ?? "").trim(),
         nextSteps: String(form.get("nextSteps") ?? "").trim()
       },
@@ -907,6 +909,7 @@ export default function Home() {
                   </div>
                   <TimelineList timeline={timeline.slice(0, 5)} />
                 </div>
+                <ActivityHeatmap experiments={experiments} ideas={ideas} />
               </div>
             </section>
           </>
@@ -1081,12 +1084,16 @@ export default function Home() {
         )}
 
         {activeSection === "timeline" && (
-          <section className="card">
-            <div className="card-title">
-              <h2>Timeline</h2>
-              <span className="pill">Chronological research memory</span>
+          <section className="side-stack">
+            <WeeklyExperimentDigest experiments={experiments} ideas={ideas} />
+            <ActivityHeatmap experiments={experiments} ideas={ideas} />
+            <div className="card">
+              <div className="card-title">
+                <h2>Timeline</h2>
+                <span className="pill">Chronological research memory</span>
+              </div>
+              <TimelineList timeline={timeline} />
             </div>
-            <TimelineList timeline={timeline} />
           </section>
         )}
 

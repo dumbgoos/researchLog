@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createExperiment } from "@/lib/repository";
-import type { ExperimentStatus } from "@/lib/types";
+import type { ExperimentResultArtifact, ExperimentStatus } from "@/lib/types";
 
 const experimentStatuses: ExperimentStatus[] = ["Planned", "Running", "Done", "Failed", "Superseded"];
 
@@ -16,9 +16,10 @@ export async function POST(request: NextRequest) {
 
   const configJson = normalizeJsonText(payload.configJson, "{}");
   const resultMetricsJson = normalizeJsonText(payload.resultMetricsJson, "{}");
+  const resultArtifacts = payload.resultArtifactsJson === undefined ? [] : normalizeResultArtifacts(payload.resultArtifactsJson);
 
-  if (configJson === null || resultMetricsJson === null) {
-    return NextResponse.json({ error: "Config and metrics must be valid JSON." }, { status: 400 });
+  if (configJson === null || resultMetricsJson === null || resultArtifacts === null) {
+    return NextResponse.json({ error: "Config, metrics, and result artifacts must be valid JSON." }, { status: 400 });
   }
 
   const experiment = await createExperiment({
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest) {
     ckptPath: String(payload.ckptPath ?? "").trim(),
     resultMetricsJson,
     resultSummary: String(payload.resultSummary ?? "").trim() || "Pending analysis.",
+    resultArtifacts,
     analysis: String(payload.analysis ?? "").trim(),
     nextSteps: String(payload.nextSteps ?? "").trim()
   });
@@ -65,6 +67,46 @@ function normalizeJsonText(value: unknown, fallback: string): string | null {
   try {
     JSON.parse(raw);
     return raw;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeResultArtifacts(value: unknown): ExperimentResultArtifact[] | null {
+  const raw = String(value ?? "").trim() || "[]";
+
+  try {
+    const parsed = JSON.parse(raw);
+
+    if (!Array.isArray(parsed)) {
+      return null;
+    }
+
+    return parsed.flatMap((item) => {
+      if (!item || typeof item !== "object") {
+        return [];
+      }
+
+      const record = item as Record<string, unknown>;
+      const title = String(record.title ?? "").trim();
+      const kind = String(record.kind ?? "").trim();
+      const content = String(record.content ?? "");
+
+      if (!title || !content || !["markdown", "image", "table"].includes(kind)) {
+        return [];
+      }
+
+      return [
+        {
+          id: String(record.id ?? `artifact-${crypto.randomUUID()}`),
+          title,
+          kind: kind as ExperimentResultArtifact["kind"],
+          content,
+          fileName: typeof record.fileName === "string" ? record.fileName : undefined,
+          mimeType: typeof record.mimeType === "string" ? record.mimeType : undefined
+        }
+      ];
+    });
   } catch {
     return null;
   }

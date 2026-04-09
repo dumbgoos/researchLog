@@ -6,6 +6,7 @@ import { decryptVaultSecret, encryptVaultSecret, isVaultAuthorized, maskSecret }
 import type {
   DecisionLog,
   Experiment,
+  ExperimentResultArtifact,
   Idea,
   IdeaProfile,
   IdeaRelation,
@@ -413,6 +414,7 @@ export async function createExperiment(
       ckptPath: input.ckptPath,
       resultMetricsJson: input.resultMetricsJson,
       resultSummary: input.resultSummary,
+      resultArtifactsJson: JSON.stringify(input.resultArtifacts),
       analysis: input.analysis,
       nextSteps: input.nextSteps,
       assetLinks: input.linkedAssetIds.length
@@ -461,6 +463,7 @@ export async function updateExperiment(
       | "ckptPath"
       | "resultMetricsJson"
       | "resultSummary"
+      | "resultArtifacts"
       | "analysis"
       | "nextSteps"
     >
@@ -489,6 +492,7 @@ export async function updateExperiment(
       ...(input.ckptPath !== undefined ? { ckptPath: input.ckptPath } : {}),
       ...(input.resultMetricsJson !== undefined ? { resultMetricsJson: input.resultMetricsJson } : {}),
       ...(input.resultSummary !== undefined ? { resultSummary: input.resultSummary } : {}),
+      ...(input.resultArtifacts !== undefined ? { resultArtifactsJson: JSON.stringify(input.resultArtifacts) } : {}),
       ...(input.analysis !== undefined ? { analysis: input.analysis } : {}),
       ...(input.nextSteps !== undefined ? { nextSteps: input.nextSteps } : {})
     }
@@ -758,6 +762,7 @@ async function seedWorkspaceIfEmpty() {
           ckptPath: experiment.ckptPath,
           resultMetricsJson: experiment.resultMetricsJson,
           resultSummary: experiment.resultSummary,
+          resultArtifactsJson: JSON.stringify(experiment.resultArtifacts),
           analysis: experiment.analysis,
           nextSteps: experiment.nextSteps,
           createdAt: new Date(`${experiment.createdAt}T00:00:00.000Z`),
@@ -859,6 +864,7 @@ function mapExperiment(record: NonNullable<ExperimentRecord>): Experiment {
     ckptPath: record.ckptPath,
     resultMetricsJson: record.resultMetricsJson,
     resultSummary: record.resultSummary,
+    resultArtifacts: parseExperimentArtifacts(record.resultArtifactsJson),
     analysis: record.analysis,
     nextSteps: record.nextSteps,
     createdAt: formatDate(record.createdAt),
@@ -1123,6 +1129,44 @@ function parseStringRecord(value: string): Record<string, string> {
     );
   } catch {
     return {};
+  }
+}
+
+function parseExperimentArtifacts(value: string): ExperimentResultArtifact[] {
+  try {
+    const parsed = JSON.parse(value);
+
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed.flatMap((item) => {
+      if (!item || typeof item !== "object") {
+        return [];
+      }
+
+      const record = item as Record<string, unknown>;
+      const title = String(record.title ?? "").trim();
+      const kind = String(record.kind ?? "").trim();
+      const content = String(record.content ?? "");
+
+      if (!title || !content || !["markdown", "image", "table"].includes(kind)) {
+        return [];
+      }
+
+      return [
+        {
+          id: String(record.id ?? `artifact-${crypto.randomUUID()}`),
+          title,
+          kind: kind as ExperimentResultArtifact["kind"],
+          content,
+          fileName: typeof record.fileName === "string" ? record.fileName : undefined,
+          mimeType: typeof record.mimeType === "string" ? record.mimeType : undefined
+        }
+      ];
+    });
+  } catch {
+    return [];
   }
 }
 

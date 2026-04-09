@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { ideaStatuses } from "@/lib/constants";
 import type { Idea, IdeaStatus } from "@/lib/types";
-import { ConfirmDeleteButton, EditorSection, EmptyState, Field, FormStatusNote, TextExcerpt } from "@/components/form-controls";
+import { ConfirmDeleteButton, EditorSection, EmptyState, Field, FormStatusNote, PopoutButton, TextExcerpt } from "@/components/form-controls";
 
 function CreateIdeaPanel({
   disabled,
@@ -23,7 +23,7 @@ function CreateIdeaPanel({
         </div>
       </div>
       <form className="form editor-form" onSubmit={onSubmit}>
-        <EditorSection title="Seed" description="The smallest useful version of the idea.">
+        <EditorSection collapsible defaultOpen title="Seed" description="The smallest useful version of the idea.">
           <Field name="title" label="Title" placeholder="e.g. Graph-guided experiment recall" required />
           <Field
             name="summary"
@@ -34,12 +34,12 @@ function CreateIdeaPanel({
             required
           />
         </EditorSection>
-        <EditorSection title="Claim" description="Make the uncertainty explicit before experiments begin.">
+        <EditorSection collapsible defaultOpen={false} title="Claim" description="Make the uncertainty explicit before experiments begin.">
           <Field name="motivation" label="Motivation" placeholder="Why is this worth pursuing?" textarea />
           <Field name="hypothesis" label="Hypothesis" placeholder="What do you believe might be true?" textarea />
           <Field name="novelty" label="Novelty" placeholder="What is new or different?" textarea />
         </EditorSection>
-        <EditorSection title="Organize" description="Lightweight routing for future retrieval.">
+        <EditorSection collapsible defaultOpen={false} title="Organize" description="Lightweight routing for future retrieval.">
           <label className="field">
             <span>Status</span>
             <select name="status" defaultValue="Inbox">
@@ -85,18 +85,19 @@ function IdeaDetailPanel({
         <button className="secondary-button compact-button" onClick={onClose} type="button">
           Close
         </button>
+        <PopoutButton href={`/ideas/${encodeURIComponent(idea.id)}?mode=edit&popout=1`} />
       </div>
       <form className="form editor-form" key={idea.id} onSubmit={(event) => onSubmit(event, idea.id)}>
-        <EditorSection title="Context" description="Keep the idea readable on its own.">
+        <EditorSection collapsible defaultOpen title="Context" description="Keep the idea readable on its own.">
           <Field defaultValue={idea.title} name="title" label="Title" placeholder="Idea title" required />
           <Field defaultValue={idea.summary} name="summary" label="Summary" placeholder="Short research summary" textarea required />
           <Field defaultValue={idea.motivation} name="motivation" label="Motivation" placeholder="Why this matters" textarea />
         </EditorSection>
-        <EditorSection title="Research claim" description="What should later experiments prove or disprove?">
+        <EditorSection collapsible defaultOpen={false} title="Research claim" description="What should later experiments prove or disprove?">
           <Field defaultValue={idea.hypothesis} name="hypothesis" label="Hypothesis" placeholder="Research hypothesis" textarea />
           <Field defaultValue={idea.novelty} name="novelty" label="Novelty" placeholder="Novelty points" textarea />
         </EditorSection>
-        <EditorSection title="Organization" description="Status, priority, and retrieval hooks.">
+        <EditorSection collapsible defaultOpen={false} title="Organization" description="Status, priority, and retrieval hooks.">
           <div className="form-pair">
             <label className="field">
               <span>Status</span>

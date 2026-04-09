@@ -12,9 +12,11 @@ test("captures a research idea and experiment from the workspace", async ({ page
   await page.getByRole("button", { name: "Ideas" }).click();
   await page.getByLabel("Title").fill(ideaTitle);
   await page.getByLabel("Summary").fill("E2E summary for the core research capture flow.");
+  await page.getByRole("button", { name: "Expand Claim" }).click();
   await page.getByLabel("Motivation").fill("Keep the browser smoke test close to the real workflow.");
   await page.getByLabel("Hypothesis").fill("A new idea can be captured and shown without a refresh.");
   await page.getByLabel("Novelty").fill("Uses the full Next.js UI and API boundary.");
+  await page.getByRole("button", { name: "Expand Organize" }).click();
   await page.getByLabel("Tags").fill("e2e, quality");
   await page.getByRole("button", { name: "Save idea" }).click();
 
@@ -26,8 +28,10 @@ test("captures a research idea and experiment from the workspace", async ({ page
   await page.getByLabel("Title").fill(experimentTitle);
   await page.getByLabel("Objective").fill("Verify the main experiment capture path.");
   await page.getByLabel("Type").fill("E2E smoke");
+  await page.getByRole("button", { name: "Expand Method" }).click();
   await page.getByLabel("Model").fill("local-test-model");
   await page.getByRole("textbox", { exact: true, name: "Dataset" }).fill("synthetic-e2e");
+  await page.getByRole("button", { name: "Expand Results" }).click();
   await page.getByLabel("Result summary").fill("Pending browser verification.");
   await page.getByRole("button", { name: "Save experiment" }).click();
 

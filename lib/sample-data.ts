@@ -54,6 +54,14 @@ export const initialExperiments: Experiment[] = [
     ckptPath: "",
     resultMetricsJson: "{}",
     resultSummary: "Pending first run.",
+    resultArtifacts: [
+      {
+        id: "artifact-profile-note",
+        title: "Planned evaluation rubric",
+        kind: "markdown",
+        content: "### Recall criteria\n- link correctness\n- rationale usefulness\n- reviewer confidence"
+      }
+    ],
     analysis: "Define a small hand-labeled set before running the ablation.",
     nextSteps: "Prepare candidate idea pairs and rubric.",
     createdAt: "2026-04-08",
@@ -81,6 +89,14 @@ export const initialExperiments: Experiment[] = [
     ckptPath: "",
     resultMetricsJson: "{}",
     resultSummary: "Keep copy/reveal behind re-auth and record audit metadata.",
+    resultArtifacts: [
+      {
+        id: "artifact-vault-table",
+        title: "Threat review",
+        kind: "table",
+        content: "risk\tdecision\nplaintext reveal\trequire re-auth\nroot password\tforbid storage"
+      }
+    ],
     analysis: "The MVP should not store SSH private keys or root passwords.",
     nextSteps: "Add Vault models in v1.5.",
     createdAt: "2026-04-07",
