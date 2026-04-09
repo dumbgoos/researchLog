@@ -309,14 +309,40 @@ function TextExcerpt({ text, tone = "body" }: { text: string; tone?: "body" | "m
   return <p className={`text-excerpt ${tone === "muted" ? "muted" : ""}`}>{excerpt}</p>;
 }
 
-function EditorSection({ children, description, title }: { children: React.ReactNode; description?: string; title: string }) {
+function EditorSection({
+  children,
+  collapsible = false,
+  defaultOpen = true,
+  description,
+  title
+}: {
+  children: React.ReactNode;
+  collapsible?: boolean;
+  defaultOpen?: boolean;
+  description?: string;
+  title: string;
+}) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
   return (
-    <section className="editor-section">
+    <section className={`editor-section ${collapsible ? "is-collapsible" : ""} ${isOpen ? "is-open" : "is-closed"}`}>
       <div className="editor-section-title">
-        <span>{title}</span>
-        {description && <p>{description}</p>}
+        <div>
+          <span>{title}</span>
+          {description && <p>{description}</p>}
+        </div>
+        {collapsible && (
+          <button
+            aria-expanded={isOpen}
+            className="secondary-button compact-button editor-section-toggle"
+            onClick={() => setIsOpen((current) => !current)}
+            type="button"
+          >
+            {isOpen ? "Collapse" : "Expand"}
+          </button>
+        )}
       </div>
-      {children}
+      {isOpen && <div className="editor-section-body">{children}</div>}
     </section>
   );
 }

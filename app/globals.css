@@ -875,11 +875,18 @@ h1 {
 .editor-section-title {
   align-items: center;
   color: var(--muted);
-  display: grid;
-  gap: 4px;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
   font-size: 0.76rem;
   font-weight: 800;
   text-transform: uppercase;
+}
+
+.editor-section-title > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
 }
 
 .editor-section-title p {
@@ -889,6 +896,27 @@ h1 {
   line-height: 1.45;
   margin: 0;
   text-transform: none;
+}
+
+.editor-section-toggle {
+  flex-shrink: 0;
+}
+
+.editor-section-body {
+  display: grid;
+  gap: 12px;
+}
+
+.editor-section.is-collapsible {
+  gap: 0;
+}
+
+.editor-section.is-collapsible .editor-section-title {
+  padding-bottom: 12px;
+}
+
+.editor-section.is-collapsible.is-closed .editor-section-title {
+  padding-bottom: 0;
 }
 
 .form-pair {

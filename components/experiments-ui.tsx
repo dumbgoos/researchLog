@@ -35,7 +35,7 @@ function CreateExperimentPanel({
         </div>
       </div>
       <form className="form editor-form" onSubmit={onSubmit}>
-        <EditorSection title="Intent" description="Connect the run to a research question.">
+        <EditorSection collapsible defaultOpen title="Intent" description="Connect the run to a research question.">
           <label className="field">
             <span>Idea</span>
             <select name="ideaId" disabled={ideas.length === 0}>
@@ -60,7 +60,7 @@ function CreateExperimentPanel({
             </label>
           </div>
         </EditorSection>
-        <EditorSection title="Method" description="What changed, and what data/model context matters?">
+        <EditorSection collapsible defaultOpen={false} title="Method" description="What changed, and what data/model context matters?">
           <div className="form-pair">
             <Field name="modelName" label="Model" placeholder="model name" />
             <Field name="datasetName" label="Dataset" placeholder="dataset name" />
@@ -72,7 +72,7 @@ function CreateExperimentPanel({
           </div>
           <Field name="configJson" label="Config JSON" placeholder="{ }" defaultValue="{}" textarea />
         </EditorSection>
-        <EditorSection title="Run" description="Enough detail to reproduce or find the run later.">
+        <EditorSection collapsible defaultOpen={false} title="Run" description="Enough detail to reproduce or find the run later.">
           <div className="form-pair">
             <Field name="branchName" label="Branch" placeholder="main" />
             <Field name="commitId" label="Commit" placeholder="git commit id" />
@@ -84,7 +84,7 @@ function CreateExperimentPanel({
           </div>
           <Field name="ckptPath" label="Checkpoint path" placeholder="checkpoints/run.pt" />
         </EditorSection>
-        <EditorSection title="Results" description="Record what happened before interpretation drifts.">
+        <EditorSection collapsible defaultOpen={false} title="Results" description="Record what happened before interpretation drifts.">
           <Field name="resultMetricsJson" label="Metrics JSON" placeholder="{ }" defaultValue="{}" textarea />
           <Field name="resultSummary" label="Result summary" placeholder="What happened?" textarea />
           <Field name="analysis" label="Analysis (Markdown)" placeholder="Why did it happen?" markdown textarea />
@@ -131,7 +131,7 @@ function ExperimentDetailPanel({
         <PopoutButton href={`/experiments/${encodeURIComponent(experiment.id)}?mode=edit&popout=1`} />
       </div>
       <form className="form editor-form" key={experiment.id} onSubmit={(event) => onSubmit(event, experiment.id)}>
-        <EditorSection title="Context" description="The research question and run state.">
+        <EditorSection collapsible defaultOpen title="Context" description="The research question and run state.">
           <Field defaultValue={experiment.title} name="title" label="Title" placeholder="Experiment title" required />
           <Field defaultValue={experiment.objective} name="objective" label="Objective" placeholder="Research question" textarea />
           <div className="form-pair">
@@ -146,7 +146,7 @@ function ExperimentDetailPanel({
             </label>
           </div>
         </EditorSection>
-        <EditorSection title="Method" description="Model, data, and methodological delta.">
+        <EditorSection collapsible defaultOpen={false} title="Method" description="Model, data, and methodological delta.">
           <div className="form-pair">
             <Field defaultValue={experiment.modelName} name="modelName" label="Model" placeholder="model name" />
             <Field defaultValue={experiment.datasetName} name="datasetName" label="Dataset" placeholder="Dataset name" />
@@ -158,7 +158,7 @@ function ExperimentDetailPanel({
           <Field defaultValue={experiment.methodChanges} name="methodChanges" label="Method changes (Markdown)" placeholder="Changes from previous runs" markdown textarea />
           <Field defaultValue={experiment.configJson} name="configJson" label="Config JSON" placeholder="{ }" textarea />
         </EditorSection>
-        <EditorSection title="Run" description="Asset and execution context.">
+        <EditorSection collapsible defaultOpen={false} title="Run" description="Asset and execution context.">
           <CheckboxGroup
             label="Linked assets"
             name="linkedAssetIds"
@@ -176,7 +176,7 @@ function ExperimentDetailPanel({
           </div>
           <Field defaultValue={experiment.ckptPath} name="ckptPath" label="Checkpoint path" placeholder="checkpoints/run.pt" />
         </EditorSection>
-        <EditorSection title="Results" description="Outcome, interpretation, and follow-up.">
+        <EditorSection collapsible defaultOpen={false} title="Results" description="Outcome, interpretation, and follow-up.">
           <Field defaultValue={experiment.resultMetricsJson} name="resultMetricsJson" label="Metrics JSON" placeholder="{ }" textarea />
           <Field defaultValue={experiment.resultSummary} name="resultSummary" label="Result summary" placeholder="What happened?" textarea />
           <Field defaultValue={experiment.analysis} name="analysis" label="Analysis (Markdown)" placeholder="Why did it happen?" markdown textarea />

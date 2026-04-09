@@ -173,16 +173,16 @@ function IdeaDetailPage({
           {savedMessage && !isEditing && <div className="detail-inline-note"><FormStatusNote tone="success">{savedMessage}</FormStatusNote></div>}
           {isEditing ? (
             <form className="form editor-form document-edit-form" onInput={persistDraft} onSubmit={handleSubmit} ref={formRef}>
-              <EditorSection title="Context" description="Keep the idea legible on its own.">
+              <EditorSection collapsible defaultOpen title="Context" description="Keep the idea legible on its own.">
                 <Field defaultValue={idea.title} name="title" label="Title" placeholder="Idea title" required />
                 <Field defaultValue={idea.summary} name="summary" label="Summary" placeholder="Short research summary" textarea required />
                 <Field defaultValue={idea.motivation} name="motivation" label="Motivation" placeholder="Why this matters" textarea markdown />
               </EditorSection>
-              <EditorSection title="Research claim" description="What should later experiments prove or disprove?">
+              <EditorSection collapsible defaultOpen={false} title="Research claim" description="What should later experiments prove or disprove?">
                 <Field defaultValue={idea.hypothesis} name="hypothesis" label="Hypothesis" placeholder="Research hypothesis" textarea markdown />
                 <Field defaultValue={idea.novelty} name="novelty" label="Novelty" placeholder="Novelty points" textarea markdown />
               </EditorSection>
-              <EditorSection title="Organization" description="Status, priority, and retrieval hooks.">
+              <EditorSection collapsible defaultOpen={false} title="Organization" description="Status, priority, and retrieval hooks.">
                 <div className="form-pair">
                   <label className="field">
                     <span>Status</span>
@@ -351,7 +351,7 @@ function ExperimentDetailPage({
           {savedMessage && !isEditing && <div className="detail-inline-note"><FormStatusNote tone="success">{savedMessage}</FormStatusNote></div>}
           {isEditing ? (
             <form className="form editor-form document-edit-form" onInput={persistDraft} onSubmit={handleSubmit} ref={formRef}>
-              <EditorSection title="Context" description="The research question and run state.">
+              <EditorSection collapsible defaultOpen title="Context" description="The research question and run state.">
                 <Field defaultValue={experiment.title} name="title" label="Title" placeholder="Experiment title" required />
                 <Field defaultValue={experiment.objective} name="objective" label="Objective" placeholder="Research question" textarea markdown />
                 <div className="form-pair">
@@ -366,7 +366,7 @@ function ExperimentDetailPage({
                   </label>
                 </div>
               </EditorSection>
-              <EditorSection title="Method" description="Model, data, and methodological delta.">
+              <EditorSection collapsible defaultOpen={false} title="Method" description="Model, data, and methodological delta.">
                 <div className="form-pair">
                   <Field defaultValue={experiment.modelName} name="modelName" label="Model" placeholder="model name" />
                   <Field defaultValue={experiment.datasetName} name="datasetName" label="Dataset" placeholder="dataset name" />
@@ -378,7 +378,7 @@ function ExperimentDetailPage({
                 <Field defaultValue={experiment.methodChanges} name="methodChanges" label="Method changes (Markdown)" placeholder="Changes from previous runs" markdown textarea />
                 <Field defaultValue={experiment.configJson} name="configJson" label="Config JSON" placeholder="{ }" textarea />
               </EditorSection>
-              <EditorSection title="Run" description="Enough detail to reproduce or find the run later.">
+              <EditorSection collapsible defaultOpen={false} title="Run" description="Enough detail to reproduce or find the run later.">
                 <CheckboxGroup
                   label="Linked assets"
                   name="linkedAssetIds"
@@ -396,7 +396,7 @@ function ExperimentDetailPage({
                 </div>
                 <Field defaultValue={experiment.ckptPath} name="ckptPath" label="Checkpoint path" placeholder="checkpoints/run.pt" />
               </EditorSection>
-              <EditorSection title="Results" description="Outcome, interpretation, and follow-up.">
+              <EditorSection collapsible defaultOpen={false} title="Results" description="Outcome, interpretation, and follow-up.">
                 <Field defaultValue={experiment.resultMetricsJson} name="resultMetricsJson" label="Metrics JSON" placeholder="{ }" textarea />
                 <Field defaultValue={experiment.resultSummary} name="resultSummary" label="Result summary" placeholder="What happened?" textarea markdown />
                 <Field defaultValue={experiment.analysis} name="analysis" label="Analysis (Markdown)" placeholder="Why did it happen?" markdown textarea />
@@ -556,7 +556,7 @@ function DecisionDetailPage({
           {savedMessage && !isEditing && <div className="detail-inline-note"><FormStatusNote tone="success">{savedMessage}</FormStatusNote></div>}
           {isEditing ? (
             <form className="form editor-form document-edit-form" onInput={persistDraft} onSubmit={handleSubmit} ref={formRef}>
-              <EditorSection title="Decision record" description="Keep the choice and the why in one place.">
+              <EditorSection collapsible defaultOpen title="Decision record" description="Keep the choice and the why in one place.">
                 <Field defaultValue={decision.title} name="title" label="Title" placeholder="Decision title" required />
                 <div className="form-pair">
                   <label className="field">

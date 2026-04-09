@@ -27,7 +27,7 @@ function CreateDecisionPanel({
         </div>
       </div>
       <form className="form editor-form" onSubmit={onSubmit}>
-        <EditorSection title="Scope" description="Connect the decision to the work it changes.">
+        <EditorSection collapsible defaultOpen title="Scope" description="Connect the decision to the work it changes.">
           <label className="field">
             <span>Idea</span>
             <select name="ideaId" disabled={ideas.length === 0}>
@@ -50,7 +50,7 @@ function CreateDecisionPanel({
             </select>
           </label>
         </EditorSection>
-        <EditorSection title="Decision record" description="The choice and the reason it should survive memory drift.">
+        <EditorSection collapsible defaultOpen={false} title="Decision record" description="The choice and the reason it should survive memory drift.">
           <Field name="title" label="Title" placeholder="e.g. Pause this direction" required />
           <label className="field">
             <span>Decision type</span>
@@ -103,7 +103,7 @@ function DecisionDetailPanel({
         <PopoutButton href={`/decisions/${encodeURIComponent(decision.id)}?mode=edit&popout=1`} />
       </div>
       <form className="form editor-form" key={decision.id} onSubmit={(event) => onSubmit(event, decision.id)}>
-        <EditorSection title="Decision record" description="Update the choice and its reasoning.">
+        <EditorSection collapsible defaultOpen title="Decision record" description="Update the choice and its reasoning.">
           <Field defaultValue={decision.title} name="title" label="Title" placeholder="Decision title" required />
           <label className="field">
             <span>Decision type</span>
