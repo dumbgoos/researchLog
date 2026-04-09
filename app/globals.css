@@ -1966,9 +1966,13 @@ h1 {
   color: #4f5864;
   font-size: 0.84rem;
   line-height: 1.5;
-  content: "?";
   overflow-wrap: anywhere;
   padding: 10px 11px;
+}
+
+.preview-bullet::before {
+  color: var(--muted);
+  content: "•";
 }
 
 .markdown-preview h3,
@@ -1992,7 +1996,7 @@ h1 {
 }
 
 .preview-bullet::before {
-  content: "�?";
+  content: "鈥?";
   color: var(--muted);
 }
 
