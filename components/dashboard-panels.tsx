@@ -19,7 +19,7 @@ function TodayPanel({
     .slice(0, 4);
 
   return (
-    <div className="card today-card">
+    <div className="card today-card focus-card">
       <div className="card-title">
         <div>
           <h2>Today</h2>
@@ -86,7 +86,7 @@ function ActiveThreadsPanel({
     .slice(0, 4);
 
   return (
-    <div className="card">
+    <div className="card thread-card">
       <div className="card-title">
         <h2>Active Threads</h2>
         <span className="pill">research memory</span>
@@ -138,7 +138,7 @@ function StaleExperimentsPanel({
     .slice(0, 4);
 
   return (
-    <div className="card">
+    <div className="card stale-card">
       <div className="card-title">
         <h2>Stale Experiments</h2>
         <span className="pill">{staleExperiments.length} review</span>

@@ -84,7 +84,9 @@ textarea:focus-visible {
 }
 
 .sidebar {
-  background: rgba(255, 255, 255, 0.86);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(250, 251, 253, 0.9)),
+    rgba(255, 255, 255, 0.86);
   border-right: 1px solid var(--line);
   color: var(--ink);
   padding: 24px 16px;
@@ -100,6 +102,18 @@ textarea:focus-visible {
   margin-bottom: 26px;
   padding: 2px 8px 18px;
   border-bottom: 1px solid var(--line);
+  position: relative;
+}
+
+.brand::after {
+  background: linear-gradient(90deg, rgba(45, 108, 223, 0.18), rgba(32, 114, 74, 0.12));
+  border-radius: 999px;
+  content: "";
+  height: 4px;
+  left: 8px;
+  position: absolute;
+  right: 54px;
+  top: -8px;
 }
 
 .brand-title {
@@ -143,6 +157,10 @@ textarea:focus-visible {
   transform: translateX(1px);
 }
 
+.nav-button.active {
+  box-shadow: inset 3px 0 0 #9fc0f7;
+}
+
 .main {
   width: min(1500px, 100%);
   padding: 36px 42px 60px;
@@ -151,11 +169,15 @@ textarea:focus-visible {
 }
 
 .page-header {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.88));
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow-soft);
   display: flex;
   justify-content: space-between;
   gap: 24px;
   align-items: flex-start;
-  padding-bottom: 10px;
+  padding: 22px 24px;
 }
 
 .eyebrow {
@@ -198,7 +220,7 @@ h1 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   justify-content: flex-end;
   min-width: 284px;
-  padding-top: 4px;
+  padding-top: 0;
   align-items: center;
 }
 
@@ -313,13 +335,22 @@ h1 {
 
 .card:hover {
   border-color: #d6dbe1;
-  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.07);
+  transform: translateY(-1px);
 }
 
 .stat-card {
   min-height: 124px;
   overflow: hidden;
   position: relative;
+}
+
+.stat-label {
+  color: #4f5966;
+  font-size: 0.75rem;
+  font-weight: 780;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .stat-card::after {
@@ -348,6 +379,44 @@ h1 {
 
 .today-card {
   padding: 20px;
+}
+
+.focus-card,
+.thread-card,
+.stale-card,
+.health-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.focus-card::before,
+.thread-card::before,
+.stale-card::before,
+.health-card::before {
+  border-radius: 999px;
+  content: "";
+  height: 110px;
+  opacity: 0.42;
+  position: absolute;
+  right: -34px;
+  top: -44px;
+  width: 110px;
+}
+
+.focus-card::before {
+  background: var(--blue-soft);
+}
+
+.thread-card::before {
+  background: rgba(139, 184, 248, 0.24);
+}
+
+.stale-card::before {
+  background: rgba(225, 189, 115, 0.24);
+}
+
+.health-card::before {
+  background: rgba(32, 114, 74, 0.14);
 }
 
 .today-hero {
@@ -598,6 +667,10 @@ h1 {
   border-color: #cfd5dc;
   box-shadow: var(--shadow-hover);
   transform: translateY(-1px);
+}
+
+.row-heading h3 {
+  letter-spacing: -0.01em;
 }
 
 .row > p {
@@ -1051,6 +1124,11 @@ h1 {
   grid-template-columns: 20px minmax(0, 1fr);
   gap: 10px;
   padding: 12px;
+}
+
+.timeline-item:hover {
+  border-color: #d1d8e0;
+  box-shadow: var(--shadow-soft);
 }
 
 .vault-audit-item {
