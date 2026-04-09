@@ -133,6 +133,7 @@ function VaultAssetList({
                 </div>
                 <p className="muted">{formatVaultSummary(asset)}</p>
                 {asset.maskedPreview && <p className="secret-preview">{asset.maskedPreview}</p>}
+                <VaultAssetOverview asset={asset} compact />
                 <div className="metadata-grid">
                   {getVaultMetadataEntries(asset).map(([key, value]) => (
                     <div className="metadata-item" key={key}>
@@ -264,6 +265,7 @@ function VaultAssetDetailPanel({
             onServerAuthMethodChange={setServerAuthMethod}
             serverAuthMethod={serverAuthMethod}
           />
+          <VaultAssetOverview asset={asset} />
           <Field defaultValue={asset.name} name="name" label="Name" placeholder={copy.namePlaceholder} required />
           <Field defaultValue={asset.provider} name="provider" label={copy.providerLabel} placeholder={copy.providerPlaceholder} />
           <div className="metadata-grid compact-metadata-grid">
@@ -403,6 +405,44 @@ function formatVaultSummary(asset: VaultAsset) {
   }
 
   return [asset.provider, asset.metadata.templateKind].filter(Boolean).join(" · ") || "Reusable template";
+}
+
+function VaultAssetOverview({ asset, compact = false }: { asset: VaultAsset; compact?: boolean }) {
+  const rows =
+    asset.assetType === "Token"
+      ? [
+          ["Base URL", asset.metadata.baseUrl || "Not set"],
+          ["Token kind", asset.metadata.tokenKind || "LLM"],
+          ["Scope", asset.metadata.modelScope || "Not set"]
+        ]
+      : asset.assetType === "Server"
+        ? [
+            ["Endpoint", [asset.metadata.username, asset.metadata.ipAddress ?? asset.metadata.host].filter(Boolean).join("@") || "Not set"],
+            ["Port", asset.metadata.port || "22"],
+            ["Auth", asset.metadata.authMethod || "Password"]
+          ]
+        : asset.assetType === "Platform"
+          ? [
+              ["Workspace", asset.metadata.workspace || "Not set"],
+              ["Project", asset.metadata.project || "Not set"],
+              ["Provider", asset.provider || "Not set"]
+            ]
+          : [
+              ["Kind", asset.metadata.templateKind || "Template"],
+              ["Entrypoint", asset.metadata.entrypoint || "Not set"],
+              ["Family", asset.provider || "Not set"]
+            ];
+
+  return (
+    <div className={`vault-overview-grid ${compact ? "compact-metadata-grid" : ""}`}>
+      {rows.map(([label, value]) => (
+        <div className="metadata-item vault-overview-item" key={`${asset.id}-${label}`}>
+          <span>{label}</span>
+          <strong>{value}</strong>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function getVaultMetadataEntries(asset: VaultAsset) {

@@ -1407,6 +1407,17 @@ h1 {
   margin-top: 6px;
 }
 
+.vault-overview-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 10px;
+}
+
+.vault-overview-item {
+  background: linear-gradient(180deg, #f8fafc 0%, #f5f7fa 100%);
+}
+
 .metadata-grid {
   display: grid;
   gap: 8px;
@@ -1743,6 +1754,7 @@ h1 {
   .dashboard-workbench,
   .workbench-grid,
   .vault-grid,
+  .vault-overview-grid,
   .metadata-grid,
   .filters,
   .review-progress,
