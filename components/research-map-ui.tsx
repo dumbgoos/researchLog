@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type FormEvent, type PointerEvent } from "react";
 import type { AIAnalysisSettings, Idea, IdeaRelation, IdeaRelationStatus, ResearchMapSnapshot } from "@/lib/types";
-import { ConfirmDeleteButton, EmptyState } from "@/components/form-controls";
+import { ConfirmDeleteButton, EmptyState, FormStatusNote } from "@/components/form-controls";
 
 function ResearchMapCanvas({
   ideas,
@@ -275,11 +275,13 @@ function ResearchMapSummary({
 function AISettingsPanel({
   disabled,
   onSubmit,
-  settings
+  settings,
+  statusMessage
 }: {
   disabled?: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   settings: AIAnalysisSettings;
+  statusMessage?: string;
 }) {
   return (
     <div className="card detail-card settings-card">
@@ -384,9 +386,12 @@ function AISettingsPanel({
             step="500"
           />
         </div>
-        <button className="button" disabled={disabled} type="submit">
-          {disabled ? "Saving..." : "Save settings"}
-        </button>
+        <div className="form-actions">
+          {statusMessage && <FormStatusNote tone="success">{statusMessage}</FormStatusNote>}
+          <button className="button" disabled={disabled} type="submit">
+            {disabled ? "Saving..." : "Save settings"}
+          </button>
+        </div>
       </form>
     </div>
   );

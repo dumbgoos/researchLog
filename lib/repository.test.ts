@@ -41,7 +41,7 @@ describe("repository smoke tests", () => {
       assetType: "Token",
       name: "Test token",
       provider: "OpenAI",
-      metadata: { usage_scope: "tests" },
+      metadata: { usage_scope: "tests", baseUrl: "https://api.openai.com/v1", tokenKind: "LLM" },
       secret: "sk-repository-secret"
     });
 
@@ -127,6 +127,7 @@ describe("repository smoke tests", () => {
     const { POST: createVaultRoute } = await import("../app/api/vault/route");
     const { PATCH: updateVaultRoute } = await import("../app/api/vault/[id]/route");
     const { POST: accessSecretRoute } = await import("../app/api/vault/[id]/secret/route");
+    const { POST: vaultSessionRoute } = await import("../app/api/vault/session/route");
 
     const ideaResponse = await createIdeaRoute(
       jsonRequest({
@@ -154,7 +155,7 @@ describe("repository smoke tests", () => {
     const vaultResponse = await createVaultRoute(
       jsonRequest({
         assetType: "Token",
-        metadata: { usage_scope: "api test" },
+        metadata: { usage_scope: "api test", baseUrl: "https://api.openai.com/v1", tokenKind: "LLM" },
         name: "API route token",
         provider: "OpenAI",
         secret: "sk-api-route-secret"
@@ -173,6 +174,14 @@ describe("repository smoke tests", () => {
 
     expect(updatedVaultResponse.status).toBe(200);
     expect(updatedVaultAsset.status).toBe("Archived");
+
+    const vaultSessionResponse = await vaultSessionRoute(
+      jsonRequest({
+        vaultPassword: "repository-test-password"
+      })
+    );
+
+    expect(vaultSessionResponse.status).toBe(200);
 
     const secretResponse = await accessSecretRoute(
       jsonRequest({

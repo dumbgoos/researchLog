@@ -19,6 +19,7 @@ export default async function DecisionPage({ params }: PageProps) {
     <DecisionDetailPage
       decision={decision}
       experiment={workspace.experiments.find((experiment) => experiment.id === decision.experimentId)}
+      experiments={workspace.experiments.filter((experiment) => experiment.ideaId === decision.ideaId)}
       idea={workspace.ideas.find((idea) => idea.id === decision.ideaId)}
     />
   );

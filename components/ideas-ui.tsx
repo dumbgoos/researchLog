@@ -3,9 +3,17 @@
 import type { FormEvent } from "react";
 import { ideaStatuses } from "@/lib/constants";
 import type { Idea, IdeaStatus } from "@/lib/types";
-import { ConfirmDeleteButton, EditorSection, EmptyState, Field, TextExcerpt } from "@/components/form-controls";
+import { ConfirmDeleteButton, EditorSection, EmptyState, Field, FormStatusNote, TextExcerpt } from "@/components/form-controls";
 
-function CreateIdeaPanel({ disabled, onSubmit }: { disabled: boolean; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
+function CreateIdeaPanel({
+  disabled,
+  onSubmit,
+  statusMessage
+}: {
+  disabled: boolean;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  statusMessage?: string;
+}) {
   return (
     <div className="card editor-card" data-kind="idea">
       <div className="card-title">
@@ -44,6 +52,7 @@ function CreateIdeaPanel({ disabled, onSubmit }: { disabled: boolean; onSubmit: 
           <Field name="relatedPapers" label="Related papers" placeholder="One paper or URL per line" textarea />
         </EditorSection>
         <div className="form-actions">
+          {statusMessage && <FormStatusNote tone="success">{statusMessage}</FormStatusNote>}
           <button className="button" disabled={disabled} type="submit">
             {disabled ? "Saving..." : "Save idea"}
           </button>
@@ -57,12 +66,14 @@ function IdeaDetailPanel({
   disabled,
   idea,
   onClose,
-  onSubmit
+  onSubmit,
+  statusMessage
 }: {
   disabled: boolean;
   idea: Idea;
   onClose: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>, id: string) => void;
+  statusMessage?: string;
 }) {
   return (
     <div className="card detail-card editor-card" data-kind="idea">
@@ -114,6 +125,7 @@ function IdeaDetailPanel({
           />
         </EditorSection>
         <div className="form-actions">
+          {statusMessage && <FormStatusNote tone="success">{statusMessage}</FormStatusNote>}
           <button className="button" disabled={disabled} type="submit">
             {disabled ? "Updating..." : "Update idea"}
           </button>

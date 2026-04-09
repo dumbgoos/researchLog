@@ -17,7 +17,7 @@ import {
   ResearchMapRelationTable,
   ResearchMapSummary
 } from "@/components/research-map-ui";
-import { CreateVaultAssetPanel, VaultAssetDetailPanel, VaultAssetList, VaultAuditList } from "@/components/vault-ui";
+import { CreateVaultAssetPanel, VaultAssetDetailPanel, VaultAssetList, VaultAuditList, VaultSessionPanel } from "@/components/vault-ui";
 import { StatCard, TimelineList } from "@/components/workspace-ui";
 import { decisionTypes, experimentStatuses, ideaStatuses, sections } from "@/lib/constants";
 import type { Section } from "@/lib/constants";
@@ -74,6 +74,9 @@ export default function Home() {
   const [relationMinConfidence, setRelationMinConfidence] = useState(0);
   const [graphViewMode, setGraphViewMode] = useState<"Network" | "Evolution" | "Clusters">("Network");
   const [selectedMapIdeaId, setSelectedMapIdeaId] = useState<string | null>(null);
+  const [panelFeedback, setPanelFeedback] = useState<Record<string, string>>({});
+  const [vaultSession, setVaultSession] = useState<{ expiresAt: number; password: string } | null>(null);
+  const [vaultSessionNow, setVaultSessionNow] = useState(() => Date.now());
 
   const activeIdeas = ideas.filter((idea) => !["Archived", "Paused"].includes(idea.status));
   const runningExperiments = experiments.filter((experiment) => experiment.status === "Running");
@@ -94,6 +97,69 @@ export default function Home() {
     const timer = window.setTimeout(() => setNotice(null), 4200);
     return () => window.clearTimeout(timer);
   }, [notice]);
+
+  useEffect(() => {
+    const raw = window.sessionStorage.getItem("researchlog-vault-session");
+
+    if (!raw) {
+      return;
+    }
+
+    try {
+      const session = JSON.parse(raw) as { expiresAt: number; password: string };
+
+      if (session.expiresAt > Date.now() && session.password) {
+        setVaultSessionNow(Date.now());
+        setVaultSession(session);
+      } else {
+        window.sessionStorage.removeItem("researchlog-vault-session");
+      }
+    } catch {
+      window.sessionStorage.removeItem("researchlog-vault-session");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!vaultSession) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setVaultSessionNow(Date.now());
+      if (vaultSession.expiresAt <= Date.now()) {
+        clearVaultSession();
+      }
+    }, 15000);
+
+    return () => window.clearInterval(timer);
+  }, [vaultSession]);
+
+  function showPanelFeedback(key: string, message: string) {
+    setPanelFeedback((current) => ({ ...current, [key]: message }));
+    window.setTimeout(() => {
+      setPanelFeedback((current) => {
+        if (!(key in current)) {
+          return current;
+        }
+
+        const next = { ...current };
+        delete next[key];
+        return next;
+      });
+    }, 2600);
+  }
+
+  const vaultSessionActive = Boolean(vaultSession && vaultSession.expiresAt > Date.now());
+  const vaultSessionRemainingMs = vaultSession ? Math.max(vaultSession.expiresAt - vaultSessionNow, 0) : 0;
+  const vaultSessionRemainingLabel =
+    vaultSessionRemainingMs > 0
+      ? vaultSessionRemainingMs >= 60_000
+        ? `${Math.ceil(vaultSessionRemainingMs / 60_000)} min`
+        : `${Math.ceil(vaultSessionRemainingMs / 1000)} sec`
+      : undefined;
+  const vaultSessionLabel = vaultSessionActive
+    ? `Unlocked until ${new Date(vaultSession!.expiresAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+    : "Locked";
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -268,6 +334,7 @@ export default function Home() {
 
     formElement.reset();
     setNotice("Idea saved.");
+    showPanelFeedback("idea-create", "Saved. Ready for the next idea.");
     await loadWorkspace();
     setIsSaving(false);
   }
@@ -321,6 +388,7 @@ export default function Home() {
 
     formElement.reset();
     setNotice("Experiment saved.");
+    showPanelFeedback("experiment-create", "Saved. Ready for another run.");
     await loadWorkspace();
     setIsSaving(false);
   }
@@ -358,6 +426,7 @@ export default function Home() {
 
     formElement.reset();
     setNotice("Decision saved.");
+    showPanelFeedback("decision-create", "Saved. Decision log updated.");
     await loadWorkspace();
     setIsSaving(false);
   }
@@ -366,22 +435,14 @@ export default function Home() {
     event.preventDefault();
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
-    const assetType = String(form.get("assetType") ?? "Token") as VaultAssetType;
-    const metadata = parseMetadataLines(String(form.get("metadata") ?? ""));
+    const payload = buildVaultAssetPayload(form);
 
     setIsSaving(true);
     setError(null);
     const response = await fetch("/api/vault", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        assetType,
-        name: String(form.get("name") ?? "").trim(),
-        provider: String(form.get("provider") ?? "").trim(),
-        secret: String(form.get("secret") ?? "").trim(),
-        metadata,
-        status: "Active"
-      })
+      body: JSON.stringify({ ...payload, status: "Active" })
     });
 
     if (!response.ok) {
@@ -392,6 +453,7 @@ export default function Home() {
 
     formElement.reset();
     setNotice("Vault asset saved.");
+    showPanelFeedback("vault-create", "Saved. Asset is encrypted and available.");
     await loadWorkspace();
     setIsSaving(false);
   }
@@ -452,6 +514,7 @@ export default function Home() {
         datasetName: String(form.get("datasetName") ?? "").trim(),
         datasetVersion: String(form.get("datasetVersion") ?? "").trim(),
         configJson: String(form.get("configJson") ?? "").trim() || "{}",
+        linkedAssetIds: form.getAll("linkedAssetIds").map(String),
         runtimeEnv: String(form.get("runtimeEnv") ?? "").trim(),
         branchName: String(form.get("branchName") ?? "").trim(),
         commitId: String(form.get("commitId") ?? "").trim(),
@@ -513,6 +576,7 @@ export default function Home() {
     }
 
     setNotice("Changes saved.");
+    showPanelFeedback(url, "Saved just now.");
     await loadWorkspace();
     setIsSaving(false);
   }
@@ -520,25 +584,23 @@ export default function Home() {
   async function updateVaultAssetDetails(event: FormEvent<HTMLFormElement>, id: string) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    const payload = buildVaultAssetPayload(form);
     await mutateRecord(
       `/api/vault/${encodeURIComponent(id)}`,
       "PATCH",
       {
-        assetType: String(form.get("assetType") ?? "Token") as VaultAssetType,
-        name: String(form.get("name") ?? "").trim(),
-        provider: String(form.get("provider") ?? "").trim(),
-        secret: String(form.get("secret") ?? "").trim(),
-        status: String(form.get("status") ?? "Active") as VaultAsset["status"],
-        metadata: parseMetadataLines(String(form.get("metadata") ?? ""))
+        ...payload,
+        status: String(form.get("status") ?? "Active") as VaultAsset["status"]
       },
       "Could not update vault asset."
     );
   }
 
   async function accessVaultSecret(assetId: string, actionType: "reveal" | "copy") {
-    const vaultPassword = window.prompt("Enter vault password to continue.");
+    const vaultPassword = vaultSessionActive ? vaultSession?.password ?? "" : "";
 
     if (!vaultPassword) {
+      setError("Unlock the vault session first.");
       return;
     }
 
@@ -552,6 +614,7 @@ export default function Home() {
 
     if (!response.ok) {
       setError("Could not access vault secret.");
+      clearVaultSession();
       setIsSaving(false);
       return;
     }
@@ -570,6 +633,47 @@ export default function Home() {
 
     await loadWorkspace();
     setIsSaving(false);
+  }
+
+  async function unlockVaultSession(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
+    const vaultPassword = String(form.get("vaultPassword") ?? "").trim();
+    const sessionMinutes = Math.max(1, Number(form.get("sessionMinutes") ?? 5) || 5);
+
+    if (!vaultPassword) {
+      return;
+    }
+
+    setIsSaving(true);
+    setError(null);
+    const response = await fetch("/api/vault/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ vaultPassword })
+    });
+
+    if (!response.ok) {
+      setError("Vault password was not accepted.");
+      setIsSaving(false);
+      return;
+    }
+
+    const session = { expiresAt: Date.now() + sessionMinutes * 60 * 1000, password: vaultPassword };
+    setVaultSession(session);
+    window.sessionStorage.setItem("researchlog-vault-session", JSON.stringify(session));
+    formElement.reset();
+    setNotice(`Vault unlocked for ${sessionMinutes} minutes.`);
+    showPanelFeedback("vault-session", "Unlocked. Reveal and copy now use the active session.");
+    setIsSaving(false);
+  }
+
+  function clearVaultSession() {
+    setVaultSession(null);
+    window.sessionStorage.removeItem("researchlog-vault-session");
+    setRevealedSecret(null);
+    showPanelFeedback("vault-session", "Vault locked.");
   }
 
   async function regenerateMap() {
@@ -620,6 +724,7 @@ export default function Home() {
 
     setAISettings((await response.json()) as AIAnalysisSettings);
     setNotice("AI settings saved.");
+    showPanelFeedback("ai-settings", "Saved. The next graph run will use this setup.");
     setIsSaving(false);
   }
 
@@ -648,6 +753,44 @@ export default function Home() {
     setComparedExperimentIds((current) =>
       current.includes(id) ? current.filter((experimentId) => experimentId !== id) : [...current, id]
     );
+  }
+
+  function buildVaultAssetPayload(form: FormData) {
+    const assetType = String(form.get("assetType") ?? "Token") as VaultAssetType;
+    const metadata = parseMetadataLines(String(form.get("metadata") ?? ""));
+
+    if (assetType === "Token") {
+      metadata.tokenKind = String(form.get("tokenKind") ?? "").trim() || "LLM";
+      metadata.baseUrl = String(form.get("baseUrl") ?? "").trim();
+      metadata.organization = String(form.get("organization") ?? "").trim();
+      metadata.modelScope = String(form.get("modelScope") ?? "").trim();
+    }
+
+    if (assetType === "Server") {
+      metadata.username = String(form.get("username") ?? "").trim();
+      metadata.ipAddress = String(form.get("ipAddress") ?? "").trim();
+      metadata.host = metadata.ipAddress;
+      metadata.port = String(form.get("port") ?? "").trim() || "22";
+      metadata.authMethod = String(form.get("authMethod") ?? "").trim() || "Password";
+    }
+
+    if (assetType === "Platform") {
+      metadata.workspace = String(form.get("workspace") ?? "").trim();
+      metadata.project = String(form.get("project") ?? "").trim();
+    }
+
+    if (assetType === "Template") {
+      metadata.templateKind = String(form.get("templateKind") ?? "").trim();
+      metadata.entrypoint = String(form.get("entrypoint") ?? "").trim();
+    }
+
+    return {
+      assetType,
+      name: String(form.get("name") ?? "").trim(),
+      provider: String(form.get("provider") ?? "").trim(),
+      secret: String(form.get("secret") ?? "").trim(),
+      metadata: Object.fromEntries(Object.entries(metadata).filter(([, value]) => value))
+    };
   }
 
   return (
@@ -811,9 +954,10 @@ export default function Home() {
                   idea={selectedIdea}
                   onClose={() => setSelectedIdeaId(null)}
                   onSubmit={updateIdeaDetails}
+                  statusMessage={panelFeedback[`/api/ideas/${encodeURIComponent(selectedIdea.id)}`]}
                 />
               )}
-              <CreateIdeaPanel disabled={isSaving} onSubmit={createIdea} />
+              <CreateIdeaPanel disabled={isSaving} onSubmit={createIdea} statusMessage={panelFeedback["idea-create"]} />
             </div>
           </section>
         )}
@@ -873,9 +1017,15 @@ export default function Home() {
                   vaultAssets={vaultAssets}
                   onClose={() => setSelectedExperimentId(null)}
                   onSubmit={updateExperimentDetails}
+                  statusMessage={panelFeedback[`/api/experiments/${encodeURIComponent(selectedExperiment.id)}`]}
                 />
               )}
-              <CreateExperimentPanel disabled={isSaving || ideas.length === 0} ideas={ideas} onSubmit={createExperiment} />
+              <CreateExperimentPanel
+                disabled={isSaving || ideas.length === 0}
+                ideas={ideas}
+                onSubmit={createExperiment}
+                statusMessage={panelFeedback["experiment-create"]}
+              />
             </div>
           </section>
         )}
@@ -916,6 +1066,7 @@ export default function Home() {
                   ideaTitle={ideas.find((idea) => idea.id === selectedDecision.ideaId)?.title ?? "Unlinked idea"}
                   onClose={() => setSelectedDecisionId(null)}
                   onSubmit={updateDecisionDetails}
+                  statusMessage={panelFeedback[`/api/decisions/${encodeURIComponent(selectedDecision.id)}`]}
                 />
               )}
               <CreateDecisionPanel
@@ -923,6 +1074,7 @@ export default function Home() {
                 experiments={experiments}
                 ideas={ideas}
                 onSubmit={createDecision}
+                statusMessage={panelFeedback["decision-create"]}
               />
             </div>
           </section>
@@ -952,6 +1104,15 @@ export default function Home() {
               />
             </div>
             <div className="side-stack">
+              <VaultSessionPanel
+                disabled={isSaving}
+                isUnlocked={vaultSessionActive}
+                onClear={clearVaultSession}
+                onSubmit={unlockVaultSession}
+                remainingLabel={vaultSessionRemainingLabel}
+                statusLabel={vaultSessionLabel}
+                statusMessage={panelFeedback["vault-session"]}
+              />
               {selectedVaultAsset && (
                 <VaultAssetDetailPanel
                   asset={selectedVaultAsset}
@@ -961,9 +1122,10 @@ export default function Home() {
                   onDeleteAsset={(id) => deleteRecord(`/api/vault/${encodeURIComponent(id)}`, "Could not delete vault asset.")}
                   onSubmit={updateVaultAssetDetails}
                   revealedSecret={revealedSecret?.assetId === selectedVaultAsset.id ? revealedSecret.value : null}
+                  statusMessage={panelFeedback[`/api/vault/${encodeURIComponent(selectedVaultAsset.id)}`]}
                 />
               )}
-              <CreateVaultAssetPanel disabled={isSaving} onSubmit={createVaultAsset} />
+              <CreateVaultAssetPanel disabled={isSaving} onSubmit={createVaultAsset} statusMessage={panelFeedback["vault-create"]} />
               <div className="card">
                 <div className="card-title">
                   <h2>Audit Trail</h2>
@@ -1059,7 +1221,12 @@ export default function Home() {
             </div>
             <div className="side-stack">
               <ResearchMapSummary ideas={ideas} map={researchMap} visibleRelations={filteredRelations.length} />
-              <AISettingsPanel disabled={isSaving} onSubmit={updateAISettings} settings={aiSettings} />
+              <AISettingsPanel
+                disabled={isSaving}
+                onSubmit={updateAISettings}
+                settings={aiSettings}
+                statusMessage={panelFeedback["ai-settings"]}
+              />
               {selectedRelation && (
                 <RelationDetailPanel
                   key={selectedRelation.id}

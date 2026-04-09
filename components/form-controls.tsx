@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 function ConfirmDeleteButton({
   disabled,
@@ -32,6 +32,16 @@ function ConfirmDeleteButton({
       {label}
     </button>
   );
+}
+
+function FormStatusNote({
+  tone = "neutral",
+  children
+}: {
+  tone?: "neutral" | "success";
+  children: React.ReactNode;
+}) {
+  return <span className={`form-status-note ${tone === "success" ? "is-success" : ""}`}>{children}</span>;
 }
 
 function Field({
@@ -95,41 +105,123 @@ function MarkdownTextarea({
   required?: boolean;
 }) {
   const [value, setValue] = useState(defaultValue ?? "");
-  const [showPreview, setShowPreview] = useState(false);
-  const insertSnippet = (snippet: string) => {
-    setValue((current) => [current.trimEnd(), snippet].filter(Boolean).join("\n"));
+  const [viewMode, setViewMode] = useState<"write" | "preview" | "split">("write");
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const insertSnippet = (before: string, after = "", fallback = "") => {
+    const textarea = textareaRef.current;
+
+    if (!textarea) {
+      setValue((current) => [current.trimEnd(), [before, fallback, after].join("")].filter(Boolean).join("\n"));
+      return;
+    }
+
+    const start = textarea.selectionStart ?? value.length;
+    const end = textarea.selectionEnd ?? value.length;
+    const selected = value.slice(start, end);
+    const insertion = `${before}${selected || fallback}${after}`;
+    const nextValue = `${value.slice(0, start)}${insertion}${value.slice(end)}`;
+
+    setValue(nextValue);
+    requestAnimationFrame(() => {
+      textarea.focus();
+      const cursor = start + insertion.length;
+      textarea.setSelectionRange(cursor, cursor);
+    });
   };
   const wordCount = value.trim().split(/\s+/).filter(Boolean).length;
+  const charCount = value.length;
+  const readingMinutes = Math.max(1, Math.round(wordCount / 180) || 1);
+  const isPreviewVisible = viewMode === "preview" || viewMode === "split";
+  const isWriteVisible = viewMode === "write" || viewMode === "split";
 
   return (
     <label className="field markdown-editor">
       <span>{label}</span>
       {hint && <small>{hint}</small>}
       <div className="markdown-toolbar" aria-label={`${label} formatting`}>
-        <button className="secondary-button compact-button" onClick={() => insertSnippet("### Heading")} type="button">
+        <div className="markdown-view-toggle" role="tablist" aria-label={`${label} editor mode`}>
+          <button
+            className={`secondary-button compact-button ${viewMode === "write" ? "is-active" : ""}`}
+            onClick={() => setViewMode("write")}
+            role="tab"
+            type="button"
+          >
+            Write
+          </button>
+          <button
+            className={`secondary-button compact-button ${viewMode === "preview" ? "is-active" : ""}`}
+            onClick={() => setViewMode("preview")}
+            role="tab"
+            type="button"
+          >
+            Preview
+          </button>
+          <button
+            className={`secondary-button compact-button ${viewMode === "split" ? "is-active" : ""}`}
+            onClick={() => setViewMode("split")}
+            role="tab"
+            type="button"
+          >
+            Split
+          </button>
+        </div>
+        <button className="secondary-button compact-button" onClick={() => insertSnippet("### ", "", "Heading")} type="button">
           Heading
         </button>
-        <button className="secondary-button compact-button" onClick={() => insertSnippet("- Observation")} type="button">
+        <button className="secondary-button compact-button" onClick={() => insertSnippet("- ", "", "Observation")} type="button">
           Bullet
         </button>
-        <button className="secondary-button compact-button" onClick={() => insertSnippet("```bash\ncommand\n```")} type="button">
+        <button className="secondary-button compact-button" onClick={() => insertSnippet("**", "**", "Key point")} type="button">
+          Bold
+        </button>
+        <button className="secondary-button compact-button" onClick={() => insertSnippet("> ", "", "Interpretation")} type="button">
+          Quote
+        </button>
+        <button className="secondary-button compact-button" onClick={() => insertSnippet("- [ ] ", "", "Next step")} type="button">
+          Checklist
+        </button>
+        <button className="secondary-button compact-button" onClick={() => insertSnippet("[", "](https://example.com)", "Reference")} type="button">
+          Link
+        </button>
+        <button className="secondary-button compact-button" onClick={() => insertSnippet("```bash\n", "\n```", "command")} type="button">
           Code
         </button>
-        <button className="secondary-button compact-button" onClick={() => setShowPreview((current) => !current)} type="button">
-          {showPreview ? "Edit" : "Preview"}
-        </button>
         <span className="markdown-counter">{wordCount} words</span>
+        <span className="markdown-counter">{charCount} chars</span>
+        <span className="markdown-counter">{readingMinutes} min read</span>
       </div>
-      <textarea
-        aria-describedby={`${name}-shortcut`}
-        name={name}
-        onChange={(event) => setValue(event.target.value)}
-        placeholder={placeholder}
-        required={required}
-        value={value}
-      />
+      <div className={`markdown-workspace markdown-workspace-${viewMode}`}>
+        {isWriteVisible && (
+          <div className="markdown-pane markdown-pane-write">
+            <div className="markdown-pane-header">
+              <strong>Writing</strong>
+              <span>Ctrl/Command + Enter saves</span>
+            </div>
+            <textarea
+              aria-describedby={`${name}-shortcut`}
+              name={name}
+              onChange={(event) => setValue(event.target.value)}
+              placeholder={placeholder}
+              ref={textareaRef}
+              required={required}
+              value={value}
+            />
+          </div>
+        )}
+        {isPreviewVisible && (
+          <div className="markdown-pane markdown-pane-preview">
+            <div className="markdown-pane-header">
+              <strong>Preview</strong>
+              <span>Rendered from current draft</span>
+            </div>
+            <div className="markdown-live-preview">
+              <MarkdownPreview title="Preview" value={value} />
+              {!value.trim() && <p className="microcopy">Start writing to preview headings, bullets, quotes, and code blocks.</p>}
+            </div>
+          </div>
+        )}
+      </div>
       <small id={`${name}-shortcut`}>Ctrl/Command + Enter saves the active form.</small>
-      {showPreview && <MarkdownPreview title="Preview" value={value} />}
     </label>
   );
 }
@@ -211,7 +303,7 @@ function EditorSection({ children, description, title }: { children: React.React
 }
 
 
-function MarkdownPreview({ title, value }: { title: string; value: string }) {
+function MarkdownPreview({ title, value }: { title?: string; value: string }) {
   const blocks = value
     .split("\n")
     .map((line) => line.trim())
@@ -247,4 +339,4 @@ function MarkdownPreview({ title, value }: { title: string; value: string }) {
   );
 }
 
-export { CheckboxGroup, ConfirmDeleteButton, EditorSection, EmptyState, Field, MarkdownPreview, TextExcerpt };
+export { CheckboxGroup, ConfirmDeleteButton, EditorSection, EmptyState, Field, FormStatusNote, MarkdownPreview, TextExcerpt };
