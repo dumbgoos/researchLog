@@ -1723,9 +1723,19 @@ h1 {
   padding: 34px 40px 56px;
 }
 
+.popout-shell {
+  max-width: 920px;
+  padding: 18px 18px 28px;
+}
+
 .detail-topbar {
   display: flex;
   justify-content: flex-start;
+}
+
+.detail-topbar-actions {
+  display: flex;
+  gap: 10px;
 }
 
 .detail-header {
@@ -1741,6 +1751,15 @@ h1 {
   overflow: hidden;
   padding: 24px;
   position: relative;
+}
+
+.popout-shell .detail-header {
+  gap: 12px;
+  padding: 18px 20px 18px 24px;
+}
+
+.popout-shell h1 {
+  font-size: 2rem;
 }
 
 .detail-header::before {

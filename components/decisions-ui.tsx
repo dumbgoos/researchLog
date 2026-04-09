@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { decisionTypes } from "@/lib/constants";
 import type { DecisionLog, Experiment, Idea } from "@/lib/types";
-import { ConfirmDeleteButton, EditorSection, EmptyState, Field, FormStatusNote, MarkdownPreview, TextExcerpt } from "@/components/form-controls";
+import { ConfirmDeleteButton, EditorSection, EmptyState, Field, FormStatusNote, MarkdownPreview, PopoutButton, TextExcerpt } from "@/components/form-controls";
 
 function CreateDecisionPanel({
   disabled,
@@ -100,6 +100,7 @@ function DecisionDetailPanel({
         <button className="secondary-button compact-button" onClick={onClose} type="button">
           Close
         </button>
+        <PopoutButton href={`/decisions/${encodeURIComponent(decision.id)}?mode=edit&popout=1`} />
       </div>
       <form className="form editor-form" key={decision.id} onSubmit={(event) => onSubmit(event, decision.id)}>
         <EditorSection title="Decision record" description="Update the choice and its reasoning.">

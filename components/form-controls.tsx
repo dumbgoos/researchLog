@@ -44,6 +44,25 @@ function FormStatusNote({
   return <span className={`form-status-note ${tone === "success" ? "is-success" : ""}`}>{children}</span>;
 }
 
+function PopoutButton({ href, label = "Pop out" }: { href: string; label?: string }) {
+  return (
+    <button
+      className="secondary-button compact-button"
+      onClick={() => {
+        const popup = window.open(
+          href,
+          "_blank",
+          "popup=yes,width=640,height=860,left=120,top=120,resizable=yes,scrollbars=yes"
+        );
+        popup?.focus();
+      }}
+      type="button"
+    >
+      {label}
+    </button>
+  );
+}
+
 function Field({
   name,
   label,
@@ -339,4 +358,4 @@ function MarkdownPreview({ title, value }: { title?: string; value: string }) {
   );
 }
 
-export { CheckboxGroup, ConfirmDeleteButton, EditorSection, EmptyState, Field, FormStatusNote, MarkdownPreview, TextExcerpt };
+export { CheckboxGroup, ConfirmDeleteButton, EditorSection, EmptyState, Field, FormStatusNote, MarkdownPreview, PopoutButton, TextExcerpt };

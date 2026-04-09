@@ -12,6 +12,7 @@ function DetailShell({
   children,
   description,
   eyebrow,
+  popout,
   title,
   tone
 }: {
@@ -19,15 +20,27 @@ function DetailShell({
   children: ReactNode;
   description?: string;
   eyebrow: string;
+  popout?: boolean;
   title: string;
   tone: "idea" | "experiment" | "decision";
 }) {
   return (
-    <main className="detail-shell" data-kind={tone}>
+    <main className={`detail-shell ${popout ? "popout-shell" : ""}`} data-kind={tone}>
       <div className="detail-topbar">
-        <Link className="secondary-button inline-link-button" href="/">
-          Back to workspace
-        </Link>
+        {popout ? (
+          <div className="detail-topbar-actions">
+            <button className="secondary-button inline-link-button" onClick={() => window.close()} type="button">
+              Close window
+            </button>
+            <Link className="secondary-button inline-link-button" href={`/${tone === "idea" ? "ideas" : tone === "experiment" ? "experiments" : "decisions"}`}>
+              Workspace
+            </Link>
+          </div>
+        ) : (
+          <Link className="secondary-button inline-link-button" href="/">
+            Back to workspace
+          </Link>
+        )}
       </div>
       <header className="detail-header">
         <div>
@@ -50,9 +63,19 @@ function DetailShell({
   );
 }
 
-function IdeaDetailPage({ experimentCount, idea }: { experimentCount: number; idea: Idea }) {
+function IdeaDetailPage({
+  experimentCount,
+  idea,
+  popout = false,
+  startEditing = false
+}: {
+  experimentCount: number;
+  idea: Idea;
+  popout?: boolean;
+  startEditing?: boolean;
+}) {
   const router = useRouter();
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(startEditing);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
@@ -102,6 +125,7 @@ function IdeaDetailPage({ experimentCount, idea }: { experimentCount: number; id
       badges={[idea.status, idea.priority, `${experimentCount} experiments`]}
       description={previewText(idea.summary)}
       eyebrow="Idea"
+      popout={popout}
       title={idea.title}
       tone="idea"
     >
@@ -194,14 +218,18 @@ function IdeaDetailPage({ experimentCount, idea }: { experimentCount: number; id
 function ExperimentDetailPage({
   assets,
   experiment,
-  idea
+  idea,
+  popout = false,
+  startEditing = false
 }: {
   assets: VaultAsset[];
   experiment: Experiment;
   idea?: Idea;
+  popout?: boolean;
+  startEditing?: boolean;
 }) {
   const router = useRouter();
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(startEditing);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
@@ -258,6 +286,7 @@ function ExperimentDetailPage({
       badges={[experiment.status, experiment.experimentType, experiment.datasetName || "No dataset"]}
       description={previewText(experiment.objective)}
       eyebrow="Experiment"
+      popout={popout}
       title={experiment.title}
       tone="experiment"
     >
@@ -394,15 +423,19 @@ function DecisionDetailPage({
   decision,
   experiment,
   experiments,
-  idea
+  idea,
+  popout = false,
+  startEditing = false
 }: {
   decision: DecisionLog;
   experiment?: Experiment;
   experiments: Experiment[];
   idea?: Idea;
+  popout?: boolean;
+  startEditing?: boolean;
 }) {
   const router = useRouter();
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(startEditing);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
@@ -441,6 +474,7 @@ function DecisionDetailPage({
       badges={[decision.decisionType, idea?.title ?? "Unlinked idea", experiment?.title ?? "No experiment"]}
       description={previewText(decision.content)}
       eyebrow="Decision"
+      popout={popout}
       title={decision.title}
       tone="decision"
     >

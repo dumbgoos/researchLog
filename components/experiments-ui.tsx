@@ -11,6 +11,7 @@ import {
   Field,
   FormStatusNote,
   MarkdownPreview,
+  PopoutButton,
   TextExcerpt
 } from "@/components/form-controls";
 
@@ -127,6 +128,7 @@ function ExperimentDetailPanel({
         <button className="secondary-button compact-button" onClick={onClose} type="button">
           Close
         </button>
+        <PopoutButton href={`/experiments/${encodeURIComponent(experiment.id)}?mode=edit&popout=1`} />
       </div>
       <form className="form editor-form" key={experiment.id} onSubmit={(event) => onSubmit(event, experiment.id)}>
         <EditorSection title="Context" description="The research question and run state.">

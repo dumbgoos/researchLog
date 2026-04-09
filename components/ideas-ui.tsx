@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { ideaStatuses } from "@/lib/constants";
 import type { Idea, IdeaStatus } from "@/lib/types";
-import { ConfirmDeleteButton, EditorSection, EmptyState, Field, FormStatusNote, TextExcerpt } from "@/components/form-controls";
+import { ConfirmDeleteButton, EditorSection, EmptyState, Field, FormStatusNote, PopoutButton, TextExcerpt } from "@/components/form-controls";
 
 function CreateIdeaPanel({
   disabled,
@@ -85,6 +85,7 @@ function IdeaDetailPanel({
         <button className="secondary-button compact-button" onClick={onClose} type="button">
           Close
         </button>
+        <PopoutButton href={`/ideas/${encodeURIComponent(idea.id)}?mode=edit&popout=1`} />
       </div>
       <form className="form editor-form" key={idea.id} onSubmit={(event) => onSubmit(event, idea.id)}>
         <EditorSection title="Context" description="Keep the idea readable on its own.">
