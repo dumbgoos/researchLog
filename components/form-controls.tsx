@@ -105,7 +105,7 @@ function MarkdownTextarea({
   required?: boolean;
 }) {
   const [value, setValue] = useState(defaultValue ?? "");
-  const [showPreview, setShowPreview] = useState(false);
+  const [viewMode, setViewMode] = useState<"write" | "preview" | "split">("write");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const insertSnippet = (before: string, after = "", fallback = "") => {
     const textarea = textareaRef.current;
@@ -129,12 +129,42 @@ function MarkdownTextarea({
     });
   };
   const wordCount = value.trim().split(/\s+/).filter(Boolean).length;
+  const charCount = value.length;
+  const readingMinutes = Math.max(1, Math.round(wordCount / 180) || 1);
+  const isPreviewVisible = viewMode === "preview" || viewMode === "split";
+  const isWriteVisible = viewMode === "write" || viewMode === "split";
 
   return (
     <label className="field markdown-editor">
       <span>{label}</span>
       {hint && <small>{hint}</small>}
       <div className="markdown-toolbar" aria-label={`${label} formatting`}>
+        <div className="markdown-view-toggle" role="tablist" aria-label={`${label} editor mode`}>
+          <button
+            className={`secondary-button compact-button ${viewMode === "write" ? "is-active" : ""}`}
+            onClick={() => setViewMode("write")}
+            role="tab"
+            type="button"
+          >
+            Write
+          </button>
+          <button
+            className={`secondary-button compact-button ${viewMode === "preview" ? "is-active" : ""}`}
+            onClick={() => setViewMode("preview")}
+            role="tab"
+            type="button"
+          >
+            Preview
+          </button>
+          <button
+            className={`secondary-button compact-button ${viewMode === "split" ? "is-active" : ""}`}
+            onClick={() => setViewMode("split")}
+            role="tab"
+            type="button"
+          >
+            Split
+          </button>
+        </div>
         <button className="secondary-button compact-button" onClick={() => insertSnippet("### ", "", "Heading")} type="button">
           Heading
         </button>
@@ -156,22 +186,42 @@ function MarkdownTextarea({
         <button className="secondary-button compact-button" onClick={() => insertSnippet("```bash\n", "\n```", "command")} type="button">
           Code
         </button>
-        <button className="secondary-button compact-button" onClick={() => setShowPreview((current) => !current)} type="button">
-          {showPreview ? "Edit" : "Preview"}
-        </button>
         <span className="markdown-counter">{wordCount} words</span>
+        <span className="markdown-counter">{charCount} chars</span>
+        <span className="markdown-counter">{readingMinutes} min read</span>
       </div>
-      <textarea
-        aria-describedby={`${name}-shortcut`}
-        name={name}
-        onChange={(event) => setValue(event.target.value)}
-        placeholder={placeholder}
-        ref={textareaRef}
-        required={required}
-        value={value}
-      />
+      <div className={`markdown-workspace markdown-workspace-${viewMode}`}>
+        {isWriteVisible && (
+          <div className="markdown-pane markdown-pane-write">
+            <div className="markdown-pane-header">
+              <strong>Writing</strong>
+              <span>Ctrl/Command + Enter saves</span>
+            </div>
+            <textarea
+              aria-describedby={`${name}-shortcut`}
+              name={name}
+              onChange={(event) => setValue(event.target.value)}
+              placeholder={placeholder}
+              ref={textareaRef}
+              required={required}
+              value={value}
+            />
+          </div>
+        )}
+        {isPreviewVisible && (
+          <div className="markdown-pane markdown-pane-preview">
+            <div className="markdown-pane-header">
+              <strong>Preview</strong>
+              <span>Rendered from current draft</span>
+            </div>
+            <div className="markdown-live-preview">
+              <MarkdownPreview title="Preview" value={value} />
+              {!value.trim() && <p className="microcopy">Start writing to preview headings, bullets, quotes, and code blocks.</p>}
+            </div>
+          </div>
+        )}
+      </div>
       <small id={`${name}-shortcut`}>Ctrl/Command + Enter saves the active form.</small>
-      {showPreview && <MarkdownPreview title="Preview" value={value} />}
     </label>
   );
 }
