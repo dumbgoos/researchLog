@@ -2,33 +2,47 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { CheckboxGroup, EditorSection, Field, FormStatusNote, MarkdownPreview } from "@/components/form-controls";
 import { decisionTypes, experimentStatuses, ideaStatuses } from "@/lib/constants";
 import type { DecisionLog, Experiment, Idea, VaultAsset } from "@/lib/types";
 
 function DetailShell({
   badges,
+  canonicalHref,
   children,
   description,
   eyebrow,
+  focusMode,
+  onToggleFocusMode,
   popout,
   title,
   tone
 }: {
   badges?: string[];
+  canonicalHref?: string;
   children: ReactNode;
   description?: string;
   eyebrow: string;
+  focusMode?: boolean;
+  onToggleFocusMode?: () => void;
   popout?: boolean;
   title: string;
   tone: "idea" | "experiment" | "decision";
 }) {
   return (
-    <main className={`detail-shell ${popout ? "popout-shell" : ""}`} data-kind={tone}>
+    <main className={`detail-shell ${popout ? "popout-shell" : ""} ${focusMode ? "focus-shell" : ""}`} data-kind={tone}>
       <div className="detail-topbar">
         {popout ? (
           <div className="detail-topbar-actions">
+            {onToggleFocusMode && (
+              <button className="secondary-button compact-button" onClick={onToggleFocusMode} type="button">
+                {focusMode ? "Show context" : "Focus mode"}
+              </button>
+            )}
+            <Link className="secondary-button inline-link-button" href={canonicalHref ?? "/"}>
+              Open full page
+            </Link>
             <button className="secondary-button inline-link-button" onClick={() => window.close()} type="button">
               Close window
             </button>
@@ -79,6 +93,9 @@ function IdeaDetailPage({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
+  const [focusMode, setFocusMode] = useState(popout);
+  const draftKey = useMemo(() => `researchlog:draft:idea:${idea.id}`, [idea.id]);
+  const formRef = useDraftForm(draftKey, isEditing);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -115,21 +132,33 @@ function IdeaDetailPage({
     }
 
     setSavedMessage("Saved. The idea page is up to date.");
+    window.localStorage.removeItem(draftKey);
     setIsEditing(false);
     router.refresh();
     setIsSaving(false);
   }
 
+  useEffect(() => {
+    if (!popout) {
+      return;
+    }
+
+    document.title = `${idea.title} · ResearchLog`;
+  }, [idea.title, popout]);
+
   return (
     <DetailShell
       badges={[idea.status, idea.priority, `${experimentCount} experiments`]}
+      canonicalHref={`/ideas/${encodeURIComponent(idea.id)}`}
       description={previewText(idea.summary)}
       eyebrow="Idea"
+      focusMode={focusMode}
+      onToggleFocusMode={popout ? () => setFocusMode((current) => !current) : undefined}
       popout={popout}
       title={idea.title}
       tone="idea"
     >
-      <section className="grid workbench-grid">
+      <section className={`grid workbench-grid ${focusMode ? "focus-layout" : ""}`}>
         <article className="card document-card">
           <DetailHeaderActions
             canEdit
@@ -143,7 +172,7 @@ function IdeaDetailPage({
           {error && <div className="notice error-notice">{error}</div>}
           {savedMessage && !isEditing && <div className="detail-inline-note"><FormStatusNote tone="success">{savedMessage}</FormStatusNote></div>}
           {isEditing ? (
-            <form className="form editor-form document-edit-form" onSubmit={handleSubmit}>
+            <form className="form editor-form document-edit-form" onInput={persistDraft} onSubmit={handleSubmit} ref={formRef}>
               <EditorSection title="Context" description="Keep the idea legible on its own.">
                 <Field defaultValue={idea.title} name="title" label="Title" placeholder="Idea title" required />
                 <Field defaultValue={idea.summary} name="summary" label="Summary" placeholder="Short research summary" textarea required />
@@ -191,7 +220,8 @@ function IdeaDetailPage({
             </>
           )}
         </article>
-        <aside className="side-stack detail-rail">
+        {!focusMode && (
+          <aside className="side-stack detail-rail">
           <section className="card rail-card">
             <h2>Snapshot</h2>
             <div className="metadata-grid">
@@ -209,7 +239,8 @@ function IdeaDetailPage({
             <h2>Related Papers</h2>
             <TextList values={idea.relatedPapers} />
           </section>
-        </aside>
+          </aside>
+        )}
       </section>
     </DetailShell>
   );
@@ -233,7 +264,10 @@ function ExperimentDetailPage({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
+  const [focusMode, setFocusMode] = useState(popout);
   const linkedAssets = assets.filter((asset) => experiment.linkedAssetIds.includes(asset.id));
+  const draftKey = useMemo(() => `researchlog:draft:experiment:${experiment.id}`, [experiment.id]);
+  const formRef = useDraftForm(draftKey, isEditing);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -276,21 +310,33 @@ function ExperimentDetailPage({
     }
 
     setSavedMessage("Saved. Experiment context and assets are synced.");
+    window.localStorage.removeItem(draftKey);
     setIsEditing(false);
     router.refresh();
     setIsSaving(false);
   }
 
+  useEffect(() => {
+    if (!popout) {
+      return;
+    }
+
+    document.title = `${experiment.title} · ResearchLog`;
+  }, [experiment.title, popout]);
+
   return (
     <DetailShell
       badges={[experiment.status, experiment.experimentType, experiment.datasetName || "No dataset"]}
+      canonicalHref={`/experiments/${encodeURIComponent(experiment.id)}`}
       description={previewText(experiment.objective)}
       eyebrow="Experiment"
+      focusMode={focusMode}
+      onToggleFocusMode={popout ? () => setFocusMode((current) => !current) : undefined}
       popout={popout}
       title={experiment.title}
       tone="experiment"
     >
-      <section className="grid workbench-grid">
+      <section className={`grid workbench-grid ${focusMode ? "focus-layout" : ""}`}>
         <article className="card document-card">
           <DetailHeaderActions
             canEdit
@@ -304,7 +350,7 @@ function ExperimentDetailPage({
           {error && <div className="notice error-notice">{error}</div>}
           {savedMessage && !isEditing && <div className="detail-inline-note"><FormStatusNote tone="success">{savedMessage}</FormStatusNote></div>}
           {isEditing ? (
-            <form className="form editor-form document-edit-form" onSubmit={handleSubmit}>
+            <form className="form editor-form document-edit-form" onInput={persistDraft} onSubmit={handleSubmit} ref={formRef}>
               <EditorSection title="Context" description="The research question and run state.">
                 <Field defaultValue={experiment.title} name="title" label="Title" placeholder="Experiment title" required />
                 <Field defaultValue={experiment.objective} name="objective" label="Objective" placeholder="Research question" textarea markdown />
@@ -378,7 +424,8 @@ function ExperimentDetailPage({
             </>
           )}
         </article>
-        <aside className="side-stack detail-rail">
+        {!focusMode && (
+          <aside className="side-stack detail-rail">
           <section className="card rail-card">
             <h2>Snapshot</h2>
             <div className="metadata-grid">
@@ -413,7 +460,8 @@ function ExperimentDetailPage({
             <h2>Linked Assets</h2>
             <TextList values={linkedAssets.map((asset) => `${asset.name} (${asset.assetType})`)} />
           </section>
-        </aside>
+          </aside>
+        )}
       </section>
     </DetailShell>
   );
@@ -439,6 +487,9 @@ function DecisionDetailPage({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
+  const [focusMode, setFocusMode] = useState(popout);
+  const draftKey = useMemo(() => `researchlog:draft:decision:${decision.id}`, [decision.id]);
+  const formRef = useDraftForm(draftKey, isEditing);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -464,21 +515,33 @@ function DecisionDetailPage({
     }
 
     setSavedMessage("Saved. Decision reasoning is current.");
+    window.localStorage.removeItem(draftKey);
     setIsEditing(false);
     router.refresh();
     setIsSaving(false);
   }
 
+  useEffect(() => {
+    if (!popout) {
+      return;
+    }
+
+    document.title = `${decision.title} · ResearchLog`;
+  }, [decision.title, popout]);
+
   return (
     <DetailShell
       badges={[decision.decisionType, idea?.title ?? "Unlinked idea", experiment?.title ?? "No experiment"]}
+      canonicalHref={`/decisions/${encodeURIComponent(decision.id)}`}
       description={previewText(decision.content)}
       eyebrow="Decision"
+      focusMode={focusMode}
+      onToggleFocusMode={popout ? () => setFocusMode((current) => !current) : undefined}
       popout={popout}
       title={decision.title}
       tone="decision"
     >
-      <section className="grid workbench-grid">
+      <section className={`grid workbench-grid ${focusMode ? "focus-layout" : ""}`}>
         <article className="card document-card">
           <DetailHeaderActions
             canEdit
@@ -492,7 +555,7 @@ function DecisionDetailPage({
           {error && <div className="notice error-notice">{error}</div>}
           {savedMessage && !isEditing && <div className="detail-inline-note"><FormStatusNote tone="success">{savedMessage}</FormStatusNote></div>}
           {isEditing ? (
-            <form className="form editor-form document-edit-form" onSubmit={handleSubmit}>
+            <form className="form editor-form document-edit-form" onInput={persistDraft} onSubmit={handleSubmit} ref={formRef}>
               <EditorSection title="Decision record" description="Keep the choice and the why in one place.">
                 <Field defaultValue={decision.title} name="title" label="Title" placeholder="Decision title" required />
                 <div className="form-pair">
@@ -526,7 +589,8 @@ function DecisionDetailPage({
             </DocumentSection>
           )}
         </article>
-        <aside className="side-stack detail-rail">
+        {!focusMode && (
+          <aside className="side-stack detail-rail">
           <section className="card rail-card">
             <h2>Snapshot</h2>
             <div className="metadata-grid">
@@ -536,7 +600,8 @@ function DecisionDetailPage({
               <Metric label="Created" value={decision.createdAt} />
             </div>
           </section>
-        </aside>
+          </aside>
+        )}
       </section>
     </DetailShell>
   );
@@ -641,6 +706,81 @@ function previewText(value: string): string | undefined {
   }
 
   return normalized.length > 220 ? `${normalized.slice(0, 217)}...` : normalized;
+}
+
+function persistDraft(event: FormEvent<HTMLFormElement>) {
+  const form = event.currentTarget;
+  const draftKey = form.dataset.draftKey;
+
+  if (!draftKey) {
+    return;
+  }
+
+  const serialized: Record<string, string | string[]> = {};
+
+  for (const [key, value] of new FormData(form).entries()) {
+    const nextValue = String(value);
+    const currentValue = serialized[key];
+
+    if (Array.isArray(currentValue)) {
+      currentValue.push(nextValue);
+    } else if (typeof currentValue === "string") {
+      serialized[key] = [currentValue, nextValue];
+    } else {
+      serialized[key] = nextValue;
+    }
+  }
+
+  window.localStorage.setItem(draftKey, JSON.stringify(serialized));
+}
+
+function useDraftForm(draftKey: string, isEditing: boolean) {
+  const [formElement, setFormElement] = useState<HTMLFormElement | null>(null);
+
+  useEffect(() => {
+    if (!isEditing || !formElement) {
+      return;
+    }
+
+    formElement.dataset.draftKey = draftKey;
+    const rawDraft = window.localStorage.getItem(draftKey);
+
+    if (!rawDraft) {
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(rawDraft) as Record<string, string | string[]>;
+
+      for (const [name, value] of Object.entries(parsed)) {
+        const fields = formElement.elements.namedItem(name);
+
+        if (!fields) {
+          continue;
+        }
+
+        const values = Array.isArray(value) ? value : [value];
+        const list = "length" in fields ? Array.from(fields as RadioNodeList) : [fields];
+
+        list.forEach((field) => {
+          if (!(field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement || field instanceof HTMLSelectElement)) {
+            return;
+          }
+
+          if (field instanceof HTMLInputElement && field.type === "checkbox") {
+            field.checked = values.includes(field.value);
+            return;
+          }
+
+          field.value = values[0] ?? "";
+        });
+      }
+    } catch {
+      window.localStorage.removeItem(draftKey);
+    }
+  }, [draftKey, formElement, isEditing]);
+
+  return setFormElement;
 }
 
 export { DecisionDetailPage, ExperimentDetailPage, IdeaDetailPage };

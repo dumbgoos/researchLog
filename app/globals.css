@@ -1806,14 +1806,26 @@ h1 {
   padding: 18px 18px 28px;
 }
 
+.focus-shell {
+  max-width: 1180px;
+}
+
 .detail-topbar {
   display: flex;
   justify-content: flex-start;
 }
 
 .detail-topbar-actions {
+  backdrop-filter: blur(14px);
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid var(--line);
+  border-radius: 999px;
   display: flex;
   gap: 10px;
+  padding: 6px;
+  position: sticky;
+  top: 14px;
+  z-index: 4;
 }
 
 .detail-header {
@@ -1834,6 +1846,14 @@ h1 {
 .popout-shell .detail-header {
   gap: 12px;
   padding: 18px 20px 18px 24px;
+}
+
+.focus-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.focus-layout .document-card {
+  min-height: calc(100vh - 190px);
 }
 
 .popout-shell h1 {
