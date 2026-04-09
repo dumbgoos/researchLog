@@ -335,6 +335,7 @@ function EditorSection({
         {collapsible && (
           <button
             aria-expanded={isOpen}
+            aria-label={`${isOpen ? "Collapse" : "Expand"} ${title}`}
             className="secondary-button compact-button editor-section-toggle"
             onClick={() => setIsOpen((current) => !current)}
             type="button"
