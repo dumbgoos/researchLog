@@ -17,7 +17,7 @@ import {
   ResearchMapRelationTable,
   ResearchMapSummary
 } from "@/components/research-map-ui";
-import { CreateVaultAssetPanel, VaultAssetDetailPanel, VaultAssetList, VaultAuditList } from "@/components/vault-ui";
+import { CreateVaultAssetPanel, VaultAssetDetailPanel, VaultAssetList, VaultAuditList, VaultSessionPanel } from "@/components/vault-ui";
 import { StatCard, TimelineList } from "@/components/workspace-ui";
 import { decisionTypes, experimentStatuses, ideaStatuses, sections } from "@/lib/constants";
 import type { Section } from "@/lib/constants";
@@ -75,6 +75,7 @@ export default function Home() {
   const [graphViewMode, setGraphViewMode] = useState<"Network" | "Evolution" | "Clusters">("Network");
   const [selectedMapIdeaId, setSelectedMapIdeaId] = useState<string | null>(null);
   const [panelFeedback, setPanelFeedback] = useState<Record<string, string>>({});
+  const [vaultSession, setVaultSession] = useState<{ expiresAt: number; password: string } | null>(null);
 
   const activeIdeas = ideas.filter((idea) => !["Archived", "Paused"].includes(idea.status));
   const runningExperiments = experiments.filter((experiment) => experiment.status === "Running");
@@ -96,6 +97,40 @@ export default function Home() {
     return () => window.clearTimeout(timer);
   }, [notice]);
 
+  useEffect(() => {
+    const raw = window.sessionStorage.getItem("researchlog-vault-session");
+
+    if (!raw) {
+      return;
+    }
+
+    try {
+      const session = JSON.parse(raw) as { expiresAt: number; password: string };
+
+      if (session.expiresAt > Date.now() && session.password) {
+        setVaultSession(session);
+      } else {
+        window.sessionStorage.removeItem("researchlog-vault-session");
+      }
+    } catch {
+      window.sessionStorage.removeItem("researchlog-vault-session");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!vaultSession) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      if (vaultSession.expiresAt <= Date.now()) {
+        clearVaultSession();
+      }
+    }, 15000);
+
+    return () => window.clearInterval(timer);
+  }, [vaultSession]);
+
   function showPanelFeedback(key: string, message: string) {
     setPanelFeedback((current) => ({ ...current, [key]: message }));
     window.setTimeout(() => {
@@ -110,6 +145,11 @@ export default function Home() {
       });
     }, 2600);
   }
+
+  const vaultSessionActive = Boolean(vaultSession && vaultSession.expiresAt > Date.now());
+  const vaultSessionLabel = vaultSessionActive
+    ? `Unlocked until ${new Date(vaultSession!.expiresAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+    : "Locked";
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -547,9 +587,10 @@ export default function Home() {
   }
 
   async function accessVaultSecret(assetId: string, actionType: "reveal" | "copy") {
-    const vaultPassword = window.prompt("Enter vault password to continue.");
+    const vaultPassword = vaultSessionActive ? vaultSession?.password ?? "" : "";
 
     if (!vaultPassword) {
+      setError("Unlock the vault session first.");
       return;
     }
 
@@ -563,6 +604,7 @@ export default function Home() {
 
     if (!response.ok) {
       setError("Could not access vault secret.");
+      clearVaultSession();
       setIsSaving(false);
       return;
     }
@@ -581,6 +623,46 @@ export default function Home() {
 
     await loadWorkspace();
     setIsSaving(false);
+  }
+
+  async function unlockVaultSession(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
+    const vaultPassword = String(form.get("vaultPassword") ?? "").trim();
+
+    if (!vaultPassword) {
+      return;
+    }
+
+    setIsSaving(true);
+    setError(null);
+    const response = await fetch("/api/vault/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ vaultPassword })
+    });
+
+    if (!response.ok) {
+      setError("Vault password was not accepted.");
+      setIsSaving(false);
+      return;
+    }
+
+    const session = { expiresAt: Date.now() + 5 * 60 * 1000, password: vaultPassword };
+    setVaultSession(session);
+    window.sessionStorage.setItem("researchlog-vault-session", JSON.stringify(session));
+    formElement.reset();
+    setNotice("Vault unlocked for five minutes.");
+    showPanelFeedback("vault-session", "Unlocked. Reveal and copy now use the active session.");
+    setIsSaving(false);
+  }
+
+  function clearVaultSession() {
+    setVaultSession(null);
+    window.sessionStorage.removeItem("researchlog-vault-session");
+    setRevealedSecret(null);
+    showPanelFeedback("vault-session", "Vault locked.");
   }
 
   async function regenerateMap() {
@@ -1011,6 +1093,14 @@ export default function Home() {
               />
             </div>
             <div className="side-stack">
+              <VaultSessionPanel
+                disabled={isSaving}
+                isUnlocked={vaultSessionActive}
+                onClear={clearVaultSession}
+                onSubmit={unlockVaultSession}
+                statusLabel={vaultSessionLabel}
+                statusMessage={panelFeedback["vault-session"]}
+              />
               {selectedVaultAsset && (
                 <VaultAssetDetailPanel
                   asset={selectedVaultAsset}

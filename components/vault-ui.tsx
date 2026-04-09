@@ -272,6 +272,53 @@ function VaultAssetDetailPanel({
   );
 }
 
+function VaultSessionPanel({
+  disabled,
+  isUnlocked,
+  onClear,
+  onSubmit,
+  statusLabel,
+  statusMessage
+}: {
+  disabled: boolean;
+  isUnlocked: boolean;
+  onClear: () => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  statusLabel: string;
+  statusMessage?: string;
+}) {
+  return (
+    <div className="card detail-card">
+      <div className="card-title">
+        <div>
+          <h2>Vault Session</h2>
+          <p className="microcopy">Unlock once, then reveal or copy secrets for a short window without repeated prompts.</p>
+        </div>
+        <span className="pill">{statusLabel}</span>
+      </div>
+      <form className="form editor-form" onSubmit={onSubmit}>
+        <EditorSection
+          title={isUnlocked ? "Unlocked session" : "Unlock vault"}
+          description={isUnlocked ? "The current vault session is active in this browser tab." : "Use your vault password to start a short-lived session."}
+        >
+          <Field name="vaultPassword" label="Vault password" placeholder={isUnlocked ? "Re-enter to refresh the session" : "Enter vault password"} required />
+        </EditorSection>
+        <div className="form-actions">
+          {statusMessage && <FormStatusNote tone="success">{statusMessage}</FormStatusNote>}
+          {isUnlocked && (
+            <button className="secondary-button compact-button" disabled={disabled} onClick={onClear} type="button">
+              Lock now
+            </button>
+          )}
+          <button className="button" disabled={disabled} type="submit">
+            {disabled ? "Unlocking..." : isUnlocked ? "Refresh session" : "Unlock vault"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 function formatVaultSummary(asset: VaultAsset) {
   if (asset.assetType === "Token") {
     return [asset.provider, asset.metadata.baseUrl].filter(Boolean).join(" · ") || "LLM token";
@@ -438,4 +485,4 @@ function getVaultFieldCopy(assetType: VaultAssetType) {
   };
 }
 
-export { CreateVaultAssetPanel, VaultAssetDetailPanel, VaultAssetList, VaultAuditList };
+export { CreateVaultAssetPanel, VaultAssetDetailPanel, VaultAssetList, VaultAuditList, VaultSessionPanel };

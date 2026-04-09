@@ -127,6 +127,7 @@ describe("repository smoke tests", () => {
     const { POST: createVaultRoute } = await import("../app/api/vault/route");
     const { PATCH: updateVaultRoute } = await import("../app/api/vault/[id]/route");
     const { POST: accessSecretRoute } = await import("../app/api/vault/[id]/secret/route");
+    const { POST: vaultSessionRoute } = await import("../app/api/vault/session/route");
 
     const ideaResponse = await createIdeaRoute(
       jsonRequest({
@@ -173,6 +174,14 @@ describe("repository smoke tests", () => {
 
     expect(updatedVaultResponse.status).toBe(200);
     expect(updatedVaultAsset.status).toBe("Archived");
+
+    const vaultSessionResponse = await vaultSessionRoute(
+      jsonRequest({
+        vaultPassword: "repository-test-password"
+      })
+    );
+
+    expect(vaultSessionResponse.status).toBe(200);
 
     const secretResponse = await accessSecretRoute(
       jsonRequest({
