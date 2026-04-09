@@ -461,8 +461,7 @@ h1 {
   max-height: calc(100vh - 32px);
   overflow: auto;
   overscroll-behavior: contain;
-  position: sticky;
-  top: 20px;
+  position: static;
 }
 
 .side-stack {
