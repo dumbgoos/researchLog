@@ -76,6 +76,7 @@ export default function Home() {
   const [selectedMapIdeaId, setSelectedMapIdeaId] = useState<string | null>(null);
   const [panelFeedback, setPanelFeedback] = useState<Record<string, string>>({});
   const [vaultSession, setVaultSession] = useState<{ expiresAt: number; password: string } | null>(null);
+  const [vaultSessionNow, setVaultSessionNow] = useState(() => Date.now());
 
   const activeIdeas = ideas.filter((idea) => !["Archived", "Paused"].includes(idea.status));
   const runningExperiments = experiments.filter((experiment) => experiment.status === "Running");
@@ -108,6 +109,7 @@ export default function Home() {
       const session = JSON.parse(raw) as { expiresAt: number; password: string };
 
       if (session.expiresAt > Date.now() && session.password) {
+        setVaultSessionNow(Date.now());
         setVaultSession(session);
       } else {
         window.sessionStorage.removeItem("researchlog-vault-session");
@@ -123,6 +125,7 @@ export default function Home() {
     }
 
     const timer = window.setInterval(() => {
+      setVaultSessionNow(Date.now());
       if (vaultSession.expiresAt <= Date.now()) {
         clearVaultSession();
       }
@@ -147,6 +150,13 @@ export default function Home() {
   }
 
   const vaultSessionActive = Boolean(vaultSession && vaultSession.expiresAt > Date.now());
+  const vaultSessionRemainingMs = vaultSession ? Math.max(vaultSession.expiresAt - vaultSessionNow, 0) : 0;
+  const vaultSessionRemainingLabel =
+    vaultSessionRemainingMs > 0
+      ? vaultSessionRemainingMs >= 60_000
+        ? `${Math.ceil(vaultSessionRemainingMs / 60_000)} min`
+        : `${Math.ceil(vaultSessionRemainingMs / 1000)} sec`
+      : undefined;
   const vaultSessionLabel = vaultSessionActive
     ? `Unlocked until ${new Date(vaultSession!.expiresAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
     : "Locked";
@@ -630,6 +640,7 @@ export default function Home() {
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
     const vaultPassword = String(form.get("vaultPassword") ?? "").trim();
+    const sessionMinutes = Math.max(1, Number(form.get("sessionMinutes") ?? 5) || 5);
 
     if (!vaultPassword) {
       return;
@@ -649,11 +660,11 @@ export default function Home() {
       return;
     }
 
-    const session = { expiresAt: Date.now() + 5 * 60 * 1000, password: vaultPassword };
+    const session = { expiresAt: Date.now() + sessionMinutes * 60 * 1000, password: vaultPassword };
     setVaultSession(session);
     window.sessionStorage.setItem("researchlog-vault-session", JSON.stringify(session));
     formElement.reset();
-    setNotice("Vault unlocked for five minutes.");
+    setNotice(`Vault unlocked for ${sessionMinutes} minutes.`);
     showPanelFeedback("vault-session", "Unlocked. Reveal and copy now use the active session.");
     setIsSaving(false);
   }
@@ -1098,6 +1109,7 @@ export default function Home() {
                 isUnlocked={vaultSessionActive}
                 onClear={clearVaultSession}
                 onSubmit={unlockVaultSession}
+                remainingLabel={vaultSessionRemainingLabel}
                 statusLabel={vaultSessionLabel}
                 statusMessage={panelFeedback["vault-session"]}
               />

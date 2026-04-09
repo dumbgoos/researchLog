@@ -43,7 +43,8 @@ function CreateVaultAssetPanel({
   statusMessage?: string;
 }) {
   const [assetType, setAssetType] = useState<VaultAssetType>("Token");
-  const copy = getVaultFieldCopy(assetType);
+  const [serverAuthMethod, setServerAuthMethod] = useState("Password");
+  const copy = getVaultFieldCopy(assetType, serverAuthMethod);
   const metadata = {};
 
   return (
@@ -67,7 +68,12 @@ function CreateVaultAssetPanel({
             </label>
             <Field name="provider" label={copy.providerLabel} placeholder={copy.providerPlaceholder} />
           </div>
-          <StructuredVaultFields assetType={assetType} metadata={metadata} />
+          <StructuredVaultFields
+            assetType={assetType}
+            metadata={metadata}
+            onServerAuthMethodChange={setServerAuthMethod}
+            serverAuthMethod={serverAuthMethod}
+          />
           <Field name="name" label="Name" placeholder={copy.namePlaceholder} required />
           <Field name="secret" label={copy.secretLabel} placeholder={copy.secretPlaceholder} />
           <Field name="metadata" label="Additional metadata" placeholder={copy.metadataPlaceholder} textarea />
@@ -202,7 +208,8 @@ function VaultAssetDetailPanel({
   statusMessage?: string;
 }) {
   const [assetType, setAssetType] = useState<VaultAssetType>(asset.assetType);
-  const copy = getVaultFieldCopy(assetType);
+  const [serverAuthMethod, setServerAuthMethod] = useState(asset.metadata.authMethod ?? "Password");
+  const copy = getVaultFieldCopy(assetType, serverAuthMethod);
   const metadata = useMemo(() => asset.metadata, [asset.metadata]);
 
   return (
@@ -236,7 +243,12 @@ function VaultAssetDetailPanel({
               </select>
             </label>
           </div>
-          <StructuredVaultFields assetType={assetType} metadata={metadata} />
+          <StructuredVaultFields
+            assetType={assetType}
+            metadata={metadata}
+            onServerAuthMethodChange={setServerAuthMethod}
+            serverAuthMethod={serverAuthMethod}
+          />
           <Field defaultValue={asset.name} name="name" label="Name" placeholder={copy.namePlaceholder} required />
           <Field defaultValue={asset.provider} name="provider" label={copy.providerLabel} placeholder={copy.providerPlaceholder} />
           <Field name="secret" label={copy.secretLabel} placeholder={copy.secretPlaceholder} />
@@ -277,6 +289,7 @@ function VaultSessionPanel({
   isUnlocked,
   onClear,
   onSubmit,
+  remainingLabel,
   statusLabel,
   statusMessage
 }: {
@@ -284,6 +297,7 @@ function VaultSessionPanel({
   isUnlocked: boolean;
   onClear: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  remainingLabel?: string;
   statusLabel: string;
   statusMessage?: string;
 }) {
@@ -302,6 +316,19 @@ function VaultSessionPanel({
           description={isUnlocked ? "The current vault session is active in this browser tab." : "Use your vault password to start a short-lived session."}
         >
           <Field name="vaultPassword" label="Vault password" placeholder={isUnlocked ? "Re-enter to refresh the session" : "Enter vault password"} required />
+          <label className="field">
+            <span>Unlock duration</span>
+            <select defaultValue="5" name="sessionMinutes">
+              <option value="5">5 minutes</option>
+              <option value="15">15 minutes</option>
+              <option value="30">30 minutes</option>
+            </select>
+          </label>
+          <p className="microcopy">
+            {isUnlocked
+              ? `The current session will relock automatically${remainingLabel ? ` in ${remainingLabel}` : ""}.`
+              : "The vault password is still validated against the server-side vault configuration."}
+          </p>
         </EditorSection>
         <div className="form-actions">
           {statusMessage && <FormStatusNote tone="success">{statusMessage}</FormStatusNote>}
@@ -370,10 +397,14 @@ function getVaultMetadataEntries(asset: VaultAsset) {
 
 function StructuredVaultFields({
   assetType,
-  metadata
+  metadata,
+  onServerAuthMethodChange,
+  serverAuthMethod
 }: {
   assetType: VaultAssetType;
   metadata: Record<string, string>;
+  onServerAuthMethodChange: (value: string) => void;
+  serverAuthMethod: string;
 }) {
   if (assetType === "Token") {
     return (
@@ -401,13 +432,24 @@ function StructuredVaultFields({
           <Field defaultValue={metadata.port ?? "22"} name="port" label="Port" placeholder="22" />
           <label className="field">
             <span>Auth method</span>
-            <select defaultValue={metadata.authMethod ?? "Password"} name="authMethod">
+            <select
+              defaultValue={metadata.authMethod ?? "Password"}
+              name="authMethod"
+              onChange={(event) => onServerAuthMethodChange(event.target.value)}
+            >
               <option>Password</option>
               <option>Private key</option>
               <option>Token</option>
             </select>
           </label>
         </div>
+        <p className="microcopy">
+          {serverAuthMethod === "Private key"
+            ? "Store the SSH private key in the encrypted secret field below."
+            : serverAuthMethod === "Token"
+              ? "Use the encrypted secret field below for the server access token."
+              : "Use the encrypted secret field below for the login password."}
+        </p>
       </>
     );
   }
@@ -433,7 +475,7 @@ function StructuredVaultFields({
   return null;
 }
 
-function getVaultFieldCopy(assetType: VaultAssetType) {
+function getVaultFieldCopy(assetType: VaultAssetType, serverAuthMethod = "Password") {
   if (assetType === "Server") {
     return {
       metadataHint: "Use additional metadata for region, queue, GPU class, or notes that help you pick the right box later.",
@@ -441,8 +483,14 @@ function getVaultFieldCopy(assetType: VaultAssetType) {
       namePlaceholder: "e.g. A100 training box",
       providerLabel: "Host or cluster",
       providerPlaceholder: "AWS, on-prem, Slurm cluster",
-      secretLabel: "Password or private key",
-      secretPlaceholder: "Encrypted at rest. Use for the server password or SSH private key.",
+      secretLabel:
+        serverAuthMethod === "Private key" ? "SSH private key" : serverAuthMethod === "Token" ? "Access token" : "Password",
+      secretPlaceholder:
+        serverAuthMethod === "Private key"
+          ? "Encrypted at rest. Paste the SSH private key."
+          : serverAuthMethod === "Token"
+            ? "Encrypted at rest. Store the server access token."
+            : "Encrypted at rest. Store the server login password.",
       sectionDescription: "Server assets represent actual compute resources, including connection coordinates and encrypted credentials."
     };
   }
