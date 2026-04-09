@@ -173,14 +173,29 @@ function VaultAuditList({ audits, assets }: { audits: VaultAuditLog[]; assets: V
         />
       )}
       {audits.map((audit) => (
-        <article className="timeline-item" key={audit.id}>
+        <article className="timeline-item vault-audit-item" key={audit.id}>
           <span className="timeline-dot" aria-hidden="true" />
           <div>
             <div className="row-heading">
-              <h3>{audit.actionType}</h3>
+              <h3>{formatAuditTitle(audit.actionType)}</h3>
               <span className="tag">{audit.createdAt}</span>
             </div>
             <p className="muted">{audit.assetId ? assetById.get(audit.assetId) ?? audit.assetId : "Deleted asset"}</p>
+            <div className="tag-row">
+              <span className="tag">{audit.actorId}</span>
+              {audit.metadata.assetType && <span className="tag">{audit.metadata.assetType}</span>}
+              {audit.metadata.actionType && <span className="tag">{audit.metadata.actionType}</span>}
+            </div>
+            {Object.keys(audit.metadata).length > 0 && (
+              <div className="metadata-grid compact-metadata-grid">
+                {Object.entries(audit.metadata).map(([key, value]) => (
+                  <div className="metadata-item" key={`${audit.id}-${key}`}>
+                    <span>{key}</span>
+                    <strong>{value}</strong>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </article>
       ))}
@@ -251,6 +266,24 @@ function VaultAssetDetailPanel({
           />
           <Field defaultValue={asset.name} name="name" label="Name" placeholder={copy.namePlaceholder} required />
           <Field defaultValue={asset.provider} name="provider" label={copy.providerLabel} placeholder={copy.providerPlaceholder} />
+          <div className="metadata-grid compact-metadata-grid">
+            <div className="metadata-item">
+              <span>Created</span>
+              <strong>{asset.createdAt}</strong>
+            </div>
+            <div className="metadata-item">
+              <span>Updated</span>
+              <strong>{asset.updatedAt}</strong>
+            </div>
+            <div className="metadata-item">
+              <span>Last used</span>
+              <strong>{asset.lastUsedAt ?? "Not yet"}</strong>
+            </div>
+            <div className="metadata-item">
+              <span>Type</span>
+              <strong>{asset.assetType}</strong>
+            </div>
+          </div>
           <Field name="secret" label={copy.secretLabel} placeholder={copy.secretPlaceholder} />
           <Field
             defaultValue={formatMetadataLines(asset.metadata)}
@@ -260,7 +293,15 @@ function VaultAssetDetailPanel({
             textarea
           />
           <p className="microcopy">{copy.metadataHint}</p>
-          {asset.maskedPreview && <p className="secret-preview">{revealedSecret ?? asset.maskedPreview}</p>}
+          {asset.maskedPreview && (
+            <div className="vault-secret-block">
+              <div className="section-heading compact-section-heading">
+                <h3>Sensitive value</h3>
+                <span className="tag">{revealedSecret ? "Revealed" : "Masked"}</span>
+              </div>
+              <p className="secret-preview">{revealedSecret ?? asset.maskedPreview}</p>
+            </div>
+          )}
         </EditorSection>
         <div className="form-actions">
           {statusMessage && <FormStatusNote tone="success">{statusMessage}</FormStatusNote>}
@@ -393,6 +434,30 @@ function getVaultMetadataEntries(asset: VaultAsset) {
   }
 
   return entries;
+}
+
+function formatAuditTitle(actionType: VaultAuditLog["actionType"]) {
+  if (actionType === "reveal") {
+    return "Secret revealed";
+  }
+
+  if (actionType === "copy") {
+    return "Secret copied";
+  }
+
+  if (actionType === "revoke") {
+    return "Asset revoked";
+  }
+
+  if (actionType === "archive") {
+    return "Asset archived";
+  }
+
+  if (actionType === "delete") {
+    return "Asset deleted";
+  }
+
+  return actionType === "create" ? "Asset created" : "Asset updated";
 }
 
 function StructuredVaultFields({

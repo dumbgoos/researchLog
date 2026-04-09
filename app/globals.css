@@ -987,6 +987,10 @@ h1 {
   padding: 12px;
 }
 
+.vault-audit-item {
+  gap: 12px;
+}
+
 .timeline-dot {
   width: 10px;
   height: 10px;
@@ -1380,6 +1384,11 @@ h1 {
   margin: 0;
 }
 
+.compact-section-heading {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
 .secret-preview {
   background: #f7f9fb;
   border: 1px solid var(--line);
@@ -1392,11 +1401,21 @@ h1 {
   padding: 6px 8px;
 }
 
+.vault-secret-block {
+  display: grid;
+  gap: 8px;
+  margin-top: 6px;
+}
+
 .metadata-grid {
   display: grid;
   gap: 8px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-top: 12px;
+}
+
+.compact-metadata-grid {
+  margin-top: 8px;
 }
 
 .metadata-item {
