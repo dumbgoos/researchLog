@@ -1,7 +1,22 @@
 "use client";
 
+import { useState } from "react";
 import type { Experiment, Idea, TimelineEvent } from "@/lib/types";
 import { EmptyState, TextExcerpt } from "@/components/form-controls";
+
+type ActivityHeatmapCell = {
+  date: string;
+  count: number;
+  label: string;
+};
+
+type WeeklyDigestGroup = {
+  key: string;
+  label: string;
+  summary: string;
+  items: Experiment[];
+};
+
 function StatCard({
   detail,
   label,
@@ -47,7 +62,19 @@ function TimelineList({ timeline }: { timeline: TimelineEvent[] }) {
   );
 }
 
-function WeeklyExperimentDigest({ experiments, ideas }: { experiments: Experiment[]; ideas: Idea[] }) {
+function WeeklyExperimentDigest({
+  experiments,
+  ideas,
+  onOpenExperiment,
+  onSelectWeek,
+  selectedWeekKey
+}: {
+  experiments: Experiment[];
+  ideas: Idea[];
+  onOpenExperiment?: (id: string) => void;
+  onSelectWeek?: (weekKey: string | null) => void;
+  selectedWeekKey?: string | null;
+}) {
   const ideaById = new Map(ideas.map((idea) => [idea.id, idea.title]));
   const grouped = groupExperimentsByWeek(experiments, ideaById);
 
@@ -61,13 +88,24 @@ function WeeklyExperimentDigest({ experiments, ideas }: { experiments: Experimen
         />
       )}
       {grouped.map((week) => (
-        <section className="card weekly-card" key={week.label}>
+        <section className={`card weekly-card ${selectedWeekKey === week.key ? "is-selected" : ""}`} key={week.key}>
           <div className="card-title">
             <div>
               <h2>{week.label}</h2>
               <p className="microcopy">{week.summary}</p>
             </div>
-            <span className="pill">{week.items.length} experiments</span>
+            <div className="title-actions">
+              <span className="pill">{week.items.length} experiments</span>
+              {onSelectWeek && (
+                <button
+                  className="secondary-button compact-button"
+                  onClick={() => onSelectWeek(selectedWeekKey === week.key ? null : week.key)}
+                  type="button"
+                >
+                  {selectedWeekKey === week.key ? "Hide" : "Open week"}
+                </button>
+              )}
+            </div>
           </div>
           <div className="list">
             {week.items.map((experiment) => (
@@ -78,6 +116,13 @@ function WeeklyExperimentDigest({ experiments, ideas }: { experiments: Experimen
                 </div>
                 <p className="muted row-kicker">{ideaById.get(experiment.ideaId) ?? "Unlinked idea"}</p>
                 <TextExcerpt text={experiment.resultSummary || experiment.objective} tone="muted" />
+                {onOpenExperiment && (
+                  <div className="row-actions">
+                    <button className="secondary-button compact-button" onClick={() => onOpenExperiment(experiment.id)} type="button">
+                      Open experiment
+                    </button>
+                  </div>
+                )}
               </article>
             ))}
           </div>
@@ -87,8 +132,20 @@ function WeeklyExperimentDigest({ experiments, ideas }: { experiments: Experimen
   );
 }
 
-function ActivityHeatmap({ experiments, ideas }: { experiments: Experiment[]; ideas: Idea[] }) {
+function ActivityHeatmap({
+  experiments,
+  ideas,
+  onSelectDate,
+  selectedDate
+}: {
+  experiments: Experiment[];
+  ideas: Idea[];
+  onSelectDate?: (date: string | null) => void;
+  selectedDate?: string | null;
+}) {
   const cells = buildHeatmapCells(ideas, experiments);
+  const [hoveredDate, setHoveredDate] = useState<string | null>(null);
+  const activeCell = cells.find((cell) => cell.date === (hoveredDate ?? selectedDate)) ?? null;
 
   return (
     <div className="card heatmap-card">
@@ -102,10 +159,22 @@ function ActivityHeatmap({ experiments, ideas }: { experiments: Experiment[]; id
       <div className="heatmap-grid" role="img" aria-label="Daily idea and experiment activity heatmap">
         {cells.map((cell) => (
           <div className="heatmap-cell-wrap" key={cell.date}>
-            <div className={`heatmap-cell level-${Math.min(cell.count, 4)}`} title={cell.label} />
+            <button
+              className={`heatmap-cell level-${Math.min(cell.count, 4)} ${selectedDate === cell.date ? "is-selected" : ""}`}
+              onBlur={() => setHoveredDate((current) => (current === cell.date ? null : current))}
+              onClick={() => onSelectDate?.(selectedDate === cell.date ? null : cell.date)}
+              onFocus={() => setHoveredDate(cell.date)}
+              onMouseEnter={() => setHoveredDate(cell.date)}
+              onMouseLeave={() => setHoveredDate((current) => (current === cell.date ? null : current))}
+              title={cell.label}
+              type="button"
+            />
             <span>{cell.label}</span>
           </div>
         ))}
+      </div>
+      <div className="heatmap-hoverline" aria-live="polite">
+        {activeCell ? activeCell.label : "Hover or click a day to inspect that moment in the research timeline."}
       </div>
       <div className="heatmap-legend">
         <span>Less</span>
@@ -118,7 +187,134 @@ function ActivityHeatmap({ experiments, ideas }: { experiments: Experiment[]; id
   );
 }
 
-function buildHeatmapCells(ideas: Idea[], experiments: Experiment[]) {
+function ActivityDayDetail({
+  date,
+  experiments,
+  ideas,
+  onOpenExperiment,
+  onOpenIdea
+}: {
+  date: string | null;
+  experiments: Experiment[];
+  ideas: Idea[];
+  onOpenExperiment?: (id: string) => void;
+  onOpenIdea?: (id: string) => void;
+}) {
+  if (!date) {
+    return null;
+  }
+
+  const ideaItems = ideas.filter((idea) => idea.createdAt === date);
+  const experimentItems = experiments.filter((experiment) => experiment.createdAt === date);
+
+  return (
+    <div className="card activity-detail-card">
+      <div className="card-title">
+        <div>
+          <h2>{date}</h2>
+          <p className="microcopy">What landed in the workspace on this day.</p>
+        </div>
+        <span className="pill">{ideaItems.length + experimentItems.length} entries</span>
+      </div>
+      <div className="list">
+        {ideaItems.map((idea) => (
+          <article className="row" data-kind="idea" key={idea.id}>
+            <div className="row-heading">
+              <h3>{idea.title}</h3>
+              <span className="pill">Idea</span>
+            </div>
+            <TextExcerpt text={idea.summary} tone="muted" />
+            {onOpenIdea && (
+              <div className="row-actions">
+                <button className="secondary-button compact-button" onClick={() => onOpenIdea(idea.id)} type="button">
+                  Open idea
+                </button>
+              </div>
+            )}
+          </article>
+        ))}
+        {experimentItems.map((experiment) => (
+          <article className="row" data-kind="experiment" key={experiment.id}>
+            <div className="row-heading">
+              <h3>{experiment.title}</h3>
+              <span className="pill">{experiment.status}</span>
+            </div>
+            <TextExcerpt text={experiment.resultSummary || experiment.objective} tone="muted" />
+            {onOpenExperiment && (
+              <div className="row-actions">
+                <button className="secondary-button compact-button" onClick={() => onOpenExperiment(experiment.id)} type="button">
+                  Open experiment
+                </button>
+              </div>
+            )}
+          </article>
+        ))}
+        {ideaItems.length + experimentItems.length === 0 && (
+          <EmptyState
+            description="Nothing new was created on this date in the current workspace snapshot."
+            title="No entries for this day"
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ActivityWeekDetail({
+  experiments,
+  ideas,
+  onOpenExperiment,
+  weekKey
+}: {
+  experiments: Experiment[];
+  ideas: Idea[];
+  onOpenExperiment?: (id: string) => void;
+  weekKey: string | null;
+}) {
+  if (!weekKey) {
+    return null;
+  }
+
+  const ideaById = new Map(ideas.map((idea) => [idea.id, idea.title]));
+  const match = groupExperimentsByWeek(experiments, ideaById).find((week) => week.key === weekKey);
+
+  if (!match) {
+    return null;
+  }
+
+  return (
+    <div className="card activity-detail-card">
+      <div className="card-title">
+        <div>
+          <h2>{match.label}</h2>
+          <p className="microcopy">{match.summary}</p>
+        </div>
+        <span className="pill">{match.items.length} experiments</span>
+      </div>
+      <div className="list">
+        {match.items.map((experiment) => (
+          <article className="row" data-kind="experiment" key={experiment.id}>
+            <div className="row-heading">
+              <h3>{experiment.title}</h3>
+              <span className="pill">{experiment.status}</span>
+            </div>
+            <p className="muted row-kicker">{ideaById.get(experiment.ideaId) ?? "Unlinked idea"}</p>
+            <TextExcerpt text={experiment.resultSummary || experiment.objective} tone="muted" />
+            {onOpenExperiment && (
+              <div className="row-actions">
+                <button className="secondary-button compact-button" onClick={() => onOpenExperiment(experiment.id)} type="button">
+                  Open experiment
+                </button>
+              </div>
+            )}
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function buildHeatmapCells(ideas: Idea[], experiments: Experiment[]): ActivityHeatmapCell[] {
   const counts = new Map<string, number>();
 
   for (const date of [...ideas.map((idea) => idea.createdAt), ...experiments.map((experiment) => experiment.createdAt)]) {
@@ -126,7 +322,7 @@ function buildHeatmapCells(ideas: Idea[], experiments: Experiment[]) {
   }
 
   const today = new Date();
-  const cells = [];
+  const cells: ActivityHeatmapCell[] = [];
 
   for (let offset = 83; offset >= 0; offset -= 1) {
     const date = new Date(today);
@@ -142,7 +338,7 @@ function buildHeatmapCells(ideas: Idea[], experiments: Experiment[]) {
   return cells;
 }
 
-function groupExperimentsByWeek(experiments: Experiment[], ideaById: Map<string, string>) {
+function groupExperimentsByWeek(experiments: Experiment[], ideaById: Map<string, string>): WeeklyDigestGroup[] {
   const grouped = new Map<string, Experiment[]>();
 
   for (const experiment of experiments) {
@@ -162,9 +358,12 @@ function groupExperimentsByWeek(experiments: Experiment[], ideaById: Map<string,
     .map(([weekStart, weekExperiments]) => {
       const doneCount = weekExperiments.filter((experiment) => experiment.status === "Done").length;
       const runningCount = weekExperiments.filter((experiment) => experiment.status === "Running").length;
-      const topIdeas = Array.from(new Set(weekExperiments.map((experiment) => ideaById.get(experiment.ideaId)).filter(Boolean))).slice(0, 2);
+      const topIdeas = Array.from(
+        new Set(weekExperiments.map((experiment) => ideaById.get(experiment.ideaId)).filter(Boolean))
+      ).slice(0, 2);
 
       return {
+        key: weekStart,
         label: `Week of ${weekStart}`,
         summary: `${doneCount} done · ${runningCount} running${topIdeas.length ? ` · ${topIdeas.join(" · ")}` : ""}`,
         items: weekExperiments.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
@@ -172,9 +371,4 @@ function groupExperimentsByWeek(experiments: Experiment[], ideaById: Map<string,
     });
 }
 
-export {
-  ActivityHeatmap,
-  StatCard,
-  TimelineList,
-  WeeklyExperimentDigest
-};
+export { ActivityDayDetail, ActivityHeatmap, ActivityWeekDetail, StatCard, TimelineList, WeeklyExperimentDigest };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import type { ExperimentResultArtifact } from "@/lib/types";
 
 function ConfirmDeleteButton({
@@ -357,16 +357,27 @@ function ResultArtifactsField({
   name?: string;
 }) {
   const [artifacts, setArtifacts] = useState<ExperimentResultArtifact[]>(defaultValue ?? []);
+  const [isDragging, setIsDragging] = useState(false);
 
-  async function handleFileUpload(event: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.target.files ?? []);
+  async function appendFiles(files: File[]) {
     if (files.length === 0) {
       return;
     }
 
     const uploaded = await Promise.all(files.map(readArtifactFile));
     setArtifacts((current) => [...current, ...uploaded.filter((artifact): artifact is ExperimentResultArtifact => Boolean(artifact))]);
+  }
+
+  async function handleFileUpload(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+    await appendFiles(files);
     event.target.value = "";
+  }
+
+  async function handleDrop(event: DragEvent<HTMLLabelElement>) {
+    event.preventDefault();
+    setIsDragging(false);
+    await appendFiles(Array.from(event.dataTransfer.files ?? []));
   }
 
   function updateArtifact(id: string, patch: Partial<ExperimentResultArtifact>) {
@@ -399,9 +410,15 @@ function ResultArtifactsField({
           Add note
         </button>
       </div>
-      <label className="field">
+      <label
+        className={`field artifact-dropzone ${isDragging ? "is-dragging" : ""}`}
+        onDragEnter={() => setIsDragging(true)}
+        onDragLeave={() => setIsDragging(false)}
+        onDragOver={(event) => event.preventDefault()}
+        onDrop={handleDrop}
+      >
         <span>Upload result files</span>
-        <small>Supported: Markdown, text, CSV, TSV, and images.</small>
+        <small>Supported: Markdown, text, CSV, TSV, and images. Drag files here or browse.</small>
         <input accept=".md,.markdown,.txt,.csv,.tsv,image/*" multiple onChange={handleFileUpload} type="file" />
       </label>
       {artifacts.length === 0 ? (

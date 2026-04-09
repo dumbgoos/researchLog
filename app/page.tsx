@@ -18,7 +18,7 @@ import {
   ResearchMapSummary
 } from "@/components/research-map-ui";
 import { CreateVaultAssetPanel, VaultAssetDetailPanel, VaultAssetList, VaultAuditList, VaultSessionPanel } from "@/components/vault-ui";
-import { ActivityHeatmap, StatCard, TimelineList, WeeklyExperimentDigest } from "@/components/workspace-ui";
+import { ActivityDayDetail, ActivityHeatmap, ActivityWeekDetail, StatCard, TimelineList, WeeklyExperimentDigest } from "@/components/workspace-ui";
 import { decisionTypes, experimentStatuses, ideaStatuses, sections } from "@/lib/constants";
 import type { Section } from "@/lib/constants";
 import { parseMetadataLines } from "@/lib/form-utils";
@@ -74,6 +74,8 @@ export default function Home() {
   const [relationMinConfidence, setRelationMinConfidence] = useState(0);
   const [graphViewMode, setGraphViewMode] = useState<"Network" | "Evolution" | "Clusters">("Network");
   const [selectedMapIdeaId, setSelectedMapIdeaId] = useState<string | null>(null);
+  const [selectedActivityDate, setSelectedActivityDate] = useState<string | null>(null);
+  const [selectedWeekKey, setSelectedWeekKey] = useState<string | null>(null);
   const [panelFeedback, setPanelFeedback] = useState<Record<string, string>>({});
   const [vaultSession, setVaultSession] = useState<{ expiresAt: number; password: string } | null>(null);
   const [vaultSessionNow, setVaultSessionNow] = useState(() => Date.now());
@@ -909,7 +911,25 @@ export default function Home() {
                   </div>
                   <TimelineList timeline={timeline.slice(0, 5)} />
                 </div>
-                <ActivityHeatmap experiments={experiments} ideas={ideas} />
+                <ActivityHeatmap
+                  experiments={experiments}
+                  ideas={ideas}
+                  onSelectDate={setSelectedActivityDate}
+                  selectedDate={selectedActivityDate}
+                />
+                <ActivityDayDetail
+                  date={selectedActivityDate}
+                  experiments={experiments}
+                  ideas={ideas}
+                  onOpenExperiment={(id) => {
+                    setSelectedExperimentId(id);
+                    setActiveSection("experiments");
+                  }}
+                  onOpenIdea={(id) => {
+                    setSelectedIdeaId(id);
+                    setActiveSection("ideas");
+                  }}
+                />
               </div>
             </section>
           </>
@@ -1085,8 +1105,44 @@ export default function Home() {
 
         {activeSection === "timeline" && (
           <section className="side-stack">
-            <WeeklyExperimentDigest experiments={experiments} ideas={ideas} />
-            <ActivityHeatmap experiments={experiments} ideas={ideas} />
+            <WeeklyExperimentDigest
+              experiments={experiments}
+              ideas={ideas}
+              onOpenExperiment={(id) => {
+                setSelectedExperimentId(id);
+                setActiveSection("experiments");
+              }}
+              onSelectWeek={setSelectedWeekKey}
+              selectedWeekKey={selectedWeekKey}
+            />
+            <ActivityWeekDetail
+              experiments={experiments}
+              ideas={ideas}
+              onOpenExperiment={(id) => {
+                setSelectedExperimentId(id);
+                setActiveSection("experiments");
+              }}
+              weekKey={selectedWeekKey}
+            />
+            <ActivityHeatmap
+              experiments={experiments}
+              ideas={ideas}
+              onSelectDate={setSelectedActivityDate}
+              selectedDate={selectedActivityDate}
+            />
+            <ActivityDayDetail
+              date={selectedActivityDate}
+              experiments={experiments}
+              ideas={ideas}
+              onOpenExperiment={(id) => {
+                setSelectedExperimentId(id);
+                setActiveSection("experiments");
+              }}
+              onOpenIdea={(id) => {
+                setSelectedIdeaId(id);
+                setActiveSection("ideas");
+              }}
+            />
             <div className="card">
               <div className="card-title">
                 <h2>Timeline</h2>
