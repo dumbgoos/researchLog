@@ -20,9 +20,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   }
 
   const name = payload.name === undefined ? undefined : String(payload.name).trim();
+  const metadata = payload.metadata === undefined ? undefined : normalizeMetadata(payload.metadata);
 
   if (name === "") {
     return NextResponse.json({ error: "Asset name cannot be empty." }, { status: 400 });
+  }
+
+  if (assetType === "Token" && metadata && !metadata.baseUrl) {
+    return NextResponse.json({ error: "LLM token assets should include a base URL." }, { status: 400 });
+  }
+
+  if (assetType === "Server" && metadata && (!metadata.username || !(metadata.ipAddress || metadata.host))) {
+    return NextResponse.json({ error: "Server assets require a username and an IP or host." }, { status: 400 });
   }
 
   const asset = await updateVaultAsset(id, {
@@ -31,7 +40,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     provider: payload.provider === undefined ? undefined : String(payload.provider).trim(),
     secret: payload.secret === undefined ? undefined : String(payload.secret).trim(),
     status,
-    metadata: payload.metadata === undefined ? undefined : normalizeMetadata(payload.metadata)
+    metadata
   });
 
   return NextResponse.json(asset);

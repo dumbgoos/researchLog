@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { vaultAssetTypes } from "@/lib/constants";
 import { formatMetadataLines } from "@/lib/form-utils";
 import type { VaultAsset, VaultAuditLog, VaultAssetType } from "@/lib/types";
@@ -44,6 +44,7 @@ function CreateVaultAssetPanel({
 }) {
   const [assetType, setAssetType] = useState<VaultAssetType>("Token");
   const copy = getVaultFieldCopy(assetType);
+  const metadata = {};
 
   return (
     <div className="card detail-card">
@@ -66,14 +67,15 @@ function CreateVaultAssetPanel({
             </label>
             <Field name="provider" label={copy.providerLabel} placeholder={copy.providerPlaceholder} />
           </div>
+          <StructuredVaultFields assetType={assetType} metadata={metadata} />
           <Field name="name" label="Name" placeholder={copy.namePlaceholder} required />
           <Field name="secret" label={copy.secretLabel} placeholder={copy.secretPlaceholder} />
-          <Field name="metadata" label="Metadata" placeholder={copy.metadataPlaceholder} textarea />
+          <Field name="metadata" label="Additional metadata" placeholder={copy.metadataPlaceholder} textarea />
           <p className="microcopy">
             {copy.metadataHint}
           </p>
           <p className="microcopy">
-            Do not store SSH private keys or root passwords. Server entries should use host metadata and aliases only.
+            Encrypted secret fields can hold passwords or private keys when needed. Prefer least-privilege service accounts over shared root credentials.
           </p>
         </EditorSection>
         <div className="form-actions">
@@ -123,10 +125,10 @@ function VaultAssetList({
                   <h3>{asset.name}</h3>
                   <span className="pill">{asset.status}</span>
                 </div>
-                <p className="muted">{asset.provider || "No provider set"}</p>
+                <p className="muted">{formatVaultSummary(asset)}</p>
                 {asset.maskedPreview && <p className="secret-preview">{asset.maskedPreview}</p>}
                 <div className="metadata-grid">
-                  {Object.entries(asset.metadata).map(([key, value]) => (
+                  {getVaultMetadataEntries(asset).map(([key, value]) => (
                     <div className="metadata-item" key={key}>
                       <span>{key}</span>
                       <strong>{value}</strong>
@@ -201,6 +203,7 @@ function VaultAssetDetailPanel({
 }) {
   const [assetType, setAssetType] = useState<VaultAssetType>(asset.assetType);
   const copy = getVaultFieldCopy(assetType);
+  const metadata = useMemo(() => asset.metadata, [asset.metadata]);
 
   return (
     <div className="card detail-card">
@@ -233,13 +236,14 @@ function VaultAssetDetailPanel({
               </select>
             </label>
           </div>
+          <StructuredVaultFields assetType={assetType} metadata={metadata} />
           <Field defaultValue={asset.name} name="name" label="Name" placeholder={copy.namePlaceholder} required />
           <Field defaultValue={asset.provider} name="provider" label={copy.providerLabel} placeholder={copy.providerPlaceholder} />
           <Field name="secret" label={copy.secretLabel} placeholder={copy.secretPlaceholder} />
           <Field
             defaultValue={formatMetadataLines(asset.metadata)}
             name="metadata"
-            label="Metadata"
+            label="Additional metadata"
             placeholder={copy.metadataPlaceholder}
             textarea
           />
@@ -268,17 +272,131 @@ function VaultAssetDetailPanel({
   );
 }
 
+function formatVaultSummary(asset: VaultAsset) {
+  if (asset.assetType === "Token") {
+    return [asset.provider, asset.metadata.baseUrl].filter(Boolean).join(" · ") || "LLM token";
+  }
+
+  if (asset.assetType === "Server") {
+    const endpoint = [asset.metadata.username, asset.metadata.ipAddress ?? asset.metadata.host].filter(Boolean).join("@");
+    const port = asset.metadata.port ? `:${asset.metadata.port}` : "";
+    return `${endpoint || asset.provider || "Server"}${port}`;
+  }
+
+  if (asset.assetType === "Platform") {
+    return [asset.provider, asset.metadata.workspace, asset.metadata.project].filter(Boolean).join(" · ") || "Platform asset";
+  }
+
+  return [asset.provider, asset.metadata.templateKind].filter(Boolean).join(" · ") || "Reusable template";
+}
+
+function getVaultMetadataEntries(asset: VaultAsset) {
+  const preferredKeys =
+    asset.assetType === "Token"
+      ? ["tokenKind", "baseUrl", "organization", "modelScope"]
+      : asset.assetType === "Server"
+        ? ["username", "ipAddress", "port", "authMethod"]
+        : asset.assetType === "Platform"
+          ? ["workspace", "project"]
+          : ["templateKind", "entrypoint"];
+
+  const seen = new Set<string>();
+  const entries: [string, string][] = [];
+
+  for (const key of preferredKeys) {
+    const value = asset.metadata[key];
+
+    if (value) {
+      entries.push([key, value]);
+      seen.add(key);
+    }
+  }
+
+  for (const [key, value] of Object.entries(asset.metadata)) {
+    if (!seen.has(key)) {
+      entries.push([key, value]);
+    }
+  }
+
+  return entries;
+}
+
+function StructuredVaultFields({
+  assetType,
+  metadata
+}: {
+  assetType: VaultAssetType;
+  metadata: Record<string, string>;
+}) {
+  if (assetType === "Token") {
+    return (
+      <>
+        <div className="form-pair">
+          <Field defaultValue={metadata.tokenKind ?? "LLM"} name="tokenKind" label="Token kind" placeholder="LLM" />
+          <Field defaultValue={metadata.baseUrl} name="baseUrl" label="Base URL" placeholder="https://api.openai.com/v1" />
+        </div>
+        <div className="form-pair">
+          <Field defaultValue={metadata.organization} name="organization" label="Organization" placeholder="Optional org or workspace" />
+          <Field defaultValue={metadata.modelScope} name="modelScope" label="Model scope" placeholder="gpt-4.1 / research models" />
+        </div>
+      </>
+    );
+  }
+
+  if (assetType === "Server") {
+    return (
+      <>
+        <div className="form-pair">
+          <Field defaultValue={metadata.username} name="username" label="Username" placeholder="research" />
+          <Field defaultValue={metadata.ipAddress ?? metadata.host} name="ipAddress" label="IP / Host" placeholder="10.0.0.12" />
+        </div>
+        <div className="form-pair">
+          <Field defaultValue={metadata.port ?? "22"} name="port" label="Port" placeholder="22" />
+          <label className="field">
+            <span>Auth method</span>
+            <select defaultValue={metadata.authMethod ?? "Password"} name="authMethod">
+              <option>Password</option>
+              <option>Private key</option>
+              <option>Token</option>
+            </select>
+          </label>
+        </div>
+      </>
+    );
+  }
+
+  if (assetType === "Platform") {
+    return (
+      <div className="form-pair">
+        <Field defaultValue={metadata.workspace} name="workspace" label="Workspace" placeholder="research-lab" />
+        <Field defaultValue={metadata.project} name="project" label="Project" placeholder="graph-memory" />
+      </div>
+    );
+  }
+
+  if (assetType === "Template") {
+    return (
+      <div className="form-pair">
+        <Field defaultValue={metadata.templateKind} name="templateKind" label="Template kind" placeholder="launch preset" />
+        <Field defaultValue={metadata.entrypoint} name="entrypoint" label="Entrypoint" placeholder="python train.py" />
+      </div>
+    );
+  }
+
+  return null;
+}
+
 function getVaultFieldCopy(assetType: VaultAssetType) {
   if (assetType === "Server") {
     return {
-      metadataHint: "Record alias, region, ssh host, queue name, and any safe runtime notes.",
-      metadataPlaceholder: "host=compute-01\nregion=ap-southeast\nqueue=a100",
+      metadataHint: "Use additional metadata for region, queue, GPU class, or notes that help you pick the right box later.",
+      metadataPlaceholder: "region=ap-southeast\nqueue=a100\ngpu=8xH100",
       namePlaceholder: "e.g. A100 training box",
       providerLabel: "Host or cluster",
       providerPlaceholder: "AWS, on-prem, Slurm cluster",
-      secretLabel: "Access note",
-      secretPlaceholder: "Optional token or note for audited reveal",
-      sectionDescription: "Keep infrastructure references easy to reuse without storing raw root credentials."
+      secretLabel: "Password or private key",
+      secretPlaceholder: "Encrypted at rest. Use for the server password or SSH private key.",
+      sectionDescription: "Server assets represent actual compute resources, including connection coordinates and encrypted credentials."
     };
   }
 
@@ -309,14 +427,14 @@ function getVaultFieldCopy(assetType: VaultAssetType) {
   }
 
   return {
-    metadataHint: "Use metadata for scope, environment, and rotation notes.",
+    metadataHint: "Use additional metadata for scope, environment, rotation notes, or provider-specific details beyond the structured fields.",
     metadataPlaceholder: "usage_scope=graph analysis\nenvironment=local\nrotation=monthly",
     namePlaceholder: "e.g. OpenAI research key",
     providerLabel: "Provider",
     providerPlaceholder: "OpenAI, HF, GitHub, cluster",
-    secretLabel: "Secret value",
-    secretPlaceholder: "Encrypted at rest. Leave blank only if there is no secret yet.",
-    sectionDescription: "Token assets are best for keys and short-lived credentials used by experiments or map analysis."
+    secretLabel: "API token",
+    secretPlaceholder: "Encrypted at rest. Store the actual token here.",
+    sectionDescription: "Token assets are best for LLM keys and other API credentials, with the base URL and scope stored alongside them."
   };
 }
 

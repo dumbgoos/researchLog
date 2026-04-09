@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
   const provider = String(payload.provider ?? "").trim();
   const status = String(payload.status ?? "Active") as VaultAsset["status"];
   const secret = String(payload.secret ?? "").trim();
+  const metadata = normalizeMetadata(payload.metadata);
 
   if (!assetTypes.includes(assetType) || !assetStatuses.includes(status) || !name) {
     return NextResponse.json({ error: "Name, asset type, and valid status are required." }, { status: 400 });
@@ -31,13 +32,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Token assets require a secret value." }, { status: 400 });
   }
 
+  if (assetType === "Token" && !metadata.baseUrl) {
+    return NextResponse.json({ error: "LLM token assets should include a base URL." }, { status: 400 });
+  }
+
+  if (assetType === "Server" && (!metadata.username || !(metadata.ipAddress || metadata.host))) {
+    return NextResponse.json({ error: "Server assets require a username and an IP or host." }, { status: 400 });
+  }
+
   const asset = await createVaultAsset({
     assetType,
     name,
     provider,
     status,
     secret,
-    metadata: normalizeMetadata(payload.metadata)
+    metadata
   });
 
   return NextResponse.json(asset, { status: 201 });

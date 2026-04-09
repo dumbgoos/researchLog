@@ -41,7 +41,7 @@ describe("repository smoke tests", () => {
       assetType: "Token",
       name: "Test token",
       provider: "OpenAI",
-      metadata: { usage_scope: "tests" },
+      metadata: { usage_scope: "tests", baseUrl: "https://api.openai.com/v1", tokenKind: "LLM" },
       secret: "sk-repository-secret"
     });
 
@@ -154,7 +154,7 @@ describe("repository smoke tests", () => {
     const vaultResponse = await createVaultRoute(
       jsonRequest({
         assetType: "Token",
-        metadata: { usage_scope: "api test" },
+        metadata: { usage_scope: "api test", baseUrl: "https://api.openai.com/v1", tokenKind: "LLM" },
         name: "API route token",
         provider: "OpenAI",
         secret: "sk-api-route-secret"

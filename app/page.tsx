@@ -385,22 +385,14 @@ export default function Home() {
     event.preventDefault();
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
-    const assetType = String(form.get("assetType") ?? "Token") as VaultAssetType;
-    const metadata = parseMetadataLines(String(form.get("metadata") ?? ""));
+    const payload = buildVaultAssetPayload(form);
 
     setIsSaving(true);
     setError(null);
     const response = await fetch("/api/vault", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        assetType,
-        name: String(form.get("name") ?? "").trim(),
-        provider: String(form.get("provider") ?? "").trim(),
-        secret: String(form.get("secret") ?? "").trim(),
-        metadata,
-        status: "Active"
-      })
+      body: JSON.stringify({ ...payload, status: "Active" })
     });
 
     if (!response.ok) {
@@ -542,16 +534,13 @@ export default function Home() {
   async function updateVaultAssetDetails(event: FormEvent<HTMLFormElement>, id: string) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    const payload = buildVaultAssetPayload(form);
     await mutateRecord(
       `/api/vault/${encodeURIComponent(id)}`,
       "PATCH",
       {
-        assetType: String(form.get("assetType") ?? "Token") as VaultAssetType,
-        name: String(form.get("name") ?? "").trim(),
-        provider: String(form.get("provider") ?? "").trim(),
-        secret: String(form.get("secret") ?? "").trim(),
-        status: String(form.get("status") ?? "Active") as VaultAsset["status"],
-        metadata: parseMetadataLines(String(form.get("metadata") ?? ""))
+        ...payload,
+        status: String(form.get("status") ?? "Active") as VaultAsset["status"]
       },
       "Could not update vault asset."
     );
@@ -671,6 +660,44 @@ export default function Home() {
     setComparedExperimentIds((current) =>
       current.includes(id) ? current.filter((experimentId) => experimentId !== id) : [...current, id]
     );
+  }
+
+  function buildVaultAssetPayload(form: FormData) {
+    const assetType = String(form.get("assetType") ?? "Token") as VaultAssetType;
+    const metadata = parseMetadataLines(String(form.get("metadata") ?? ""));
+
+    if (assetType === "Token") {
+      metadata.tokenKind = String(form.get("tokenKind") ?? "").trim() || "LLM";
+      metadata.baseUrl = String(form.get("baseUrl") ?? "").trim();
+      metadata.organization = String(form.get("organization") ?? "").trim();
+      metadata.modelScope = String(form.get("modelScope") ?? "").trim();
+    }
+
+    if (assetType === "Server") {
+      metadata.username = String(form.get("username") ?? "").trim();
+      metadata.ipAddress = String(form.get("ipAddress") ?? "").trim();
+      metadata.host = metadata.ipAddress;
+      metadata.port = String(form.get("port") ?? "").trim() || "22";
+      metadata.authMethod = String(form.get("authMethod") ?? "").trim() || "Password";
+    }
+
+    if (assetType === "Platform") {
+      metadata.workspace = String(form.get("workspace") ?? "").trim();
+      metadata.project = String(form.get("project") ?? "").trim();
+    }
+
+    if (assetType === "Template") {
+      metadata.templateKind = String(form.get("templateKind") ?? "").trim();
+      metadata.entrypoint = String(form.get("entrypoint") ?? "").trim();
+    }
+
+    return {
+      assetType,
+      name: String(form.get("name") ?? "").trim(),
+      provider: String(form.get("provider") ?? "").trim(),
+      secret: String(form.get("secret") ?? "").trim(),
+      metadata: Object.fromEntries(Object.entries(metadata).filter(([, value]) => value))
+    };
   }
 
   return (
