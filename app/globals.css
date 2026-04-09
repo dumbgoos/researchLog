@@ -1088,6 +1088,18 @@ h1 {
   box-shadow: 0 -6px 18px rgba(16, 24, 40, 0.04);
 }
 
+.detail-card .form-actions {
+  background: transparent;
+  backdrop-filter: none;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: none;
+  margin-top: 2px;
+  padding: 12px 0 0;
+  position: static;
+}
+
 .form-actions:has(.button:disabled)::before {
   align-self: center;
   color: var(--muted);

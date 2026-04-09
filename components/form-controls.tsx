@@ -44,7 +44,7 @@ function FormStatusNote({
   return <span className={`form-status-note ${tone === "success" ? "is-success" : ""}`}>{children}</span>;
 }
 
-function PopoutButton({ href, label = "Pop out" }: { href: string; label?: string }) {
+function PopoutButton({ href, label = "Pop" }: { href: string; label?: string }) {
   return (
     <button
       className="secondary-button compact-button"
