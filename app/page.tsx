@@ -472,6 +472,7 @@ export default function Home() {
         datasetName: String(form.get("datasetName") ?? "").trim(),
         datasetVersion: String(form.get("datasetVersion") ?? "").trim(),
         configJson: String(form.get("configJson") ?? "").trim() || "{}",
+        linkedAssetIds: form.getAll("linkedAssetIds").map(String),
         runtimeEnv: String(form.get("runtimeEnv") ?? "").trim(),
         branchName: String(form.get("branchName") ?? "").trim(),
         commitId: String(form.get("commitId") ?? "").trim(),

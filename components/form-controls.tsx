@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 function ConfirmDeleteButton({
   disabled,
@@ -106,8 +106,27 @@ function MarkdownTextarea({
 }) {
   const [value, setValue] = useState(defaultValue ?? "");
   const [showPreview, setShowPreview] = useState(false);
-  const insertSnippet = (snippet: string) => {
-    setValue((current) => [current.trimEnd(), snippet].filter(Boolean).join("\n"));
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const insertSnippet = (before: string, after = "", fallback = "") => {
+    const textarea = textareaRef.current;
+
+    if (!textarea) {
+      setValue((current) => [current.trimEnd(), [before, fallback, after].join("")].filter(Boolean).join("\n"));
+      return;
+    }
+
+    const start = textarea.selectionStart ?? value.length;
+    const end = textarea.selectionEnd ?? value.length;
+    const selected = value.slice(start, end);
+    const insertion = `${before}${selected || fallback}${after}`;
+    const nextValue = `${value.slice(0, start)}${insertion}${value.slice(end)}`;
+
+    setValue(nextValue);
+    requestAnimationFrame(() => {
+      textarea.focus();
+      const cursor = start + insertion.length;
+      textarea.setSelectionRange(cursor, cursor);
+    });
   };
   const wordCount = value.trim().split(/\s+/).filter(Boolean).length;
 
@@ -116,13 +135,25 @@ function MarkdownTextarea({
       <span>{label}</span>
       {hint && <small>{hint}</small>}
       <div className="markdown-toolbar" aria-label={`${label} formatting`}>
-        <button className="secondary-button compact-button" onClick={() => insertSnippet("### Heading")} type="button">
+        <button className="secondary-button compact-button" onClick={() => insertSnippet("### ", "", "Heading")} type="button">
           Heading
         </button>
-        <button className="secondary-button compact-button" onClick={() => insertSnippet("- Observation")} type="button">
+        <button className="secondary-button compact-button" onClick={() => insertSnippet("- ", "", "Observation")} type="button">
           Bullet
         </button>
-        <button className="secondary-button compact-button" onClick={() => insertSnippet("```bash\ncommand\n```")} type="button">
+        <button className="secondary-button compact-button" onClick={() => insertSnippet("**", "**", "Key point")} type="button">
+          Bold
+        </button>
+        <button className="secondary-button compact-button" onClick={() => insertSnippet("> ", "", "Interpretation")} type="button">
+          Quote
+        </button>
+        <button className="secondary-button compact-button" onClick={() => insertSnippet("- [ ] ", "", "Next step")} type="button">
+          Checklist
+        </button>
+        <button className="secondary-button compact-button" onClick={() => insertSnippet("[", "](https://example.com)", "Reference")} type="button">
+          Link
+        </button>
+        <button className="secondary-button compact-button" onClick={() => insertSnippet("```bash\n", "\n```", "command")} type="button">
           Code
         </button>
         <button className="secondary-button compact-button" onClick={() => setShowPreview((current) => !current)} type="button">
@@ -135,6 +166,7 @@ function MarkdownTextarea({
         name={name}
         onChange={(event) => setValue(event.target.value)}
         placeholder={placeholder}
+        ref={textareaRef}
         required={required}
         value={value}
       />
@@ -221,7 +253,7 @@ function EditorSection({ children, description, title }: { children: React.React
 }
 
 
-function MarkdownPreview({ title, value }: { title: string; value: string }) {
+function MarkdownPreview({ title, value }: { title?: string; value: string }) {
   const blocks = value
     .split("\n")
     .map((line) => line.trim())

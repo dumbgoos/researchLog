@@ -1483,6 +1483,33 @@ h1 {
   overflow: hidden;
 }
 
+.document-edit-form {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
+  padding: 0 20px 20px;
+}
+
+.detail-content-header {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 20px 20px 16px;
+}
+
+.detail-content-header h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.detail-inline-note {
+  padding: 0 20px 18px;
+}
+
 .document-section {
   background: white;
   display: grid;

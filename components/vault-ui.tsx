@@ -1,10 +1,10 @@
 "use client";
 
-import type { FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { vaultAssetTypes } from "@/lib/constants";
 import { formatMetadataLines } from "@/lib/form-utils";
-import type { VaultAsset, VaultAuditLog } from "@/lib/types";
-import { ConfirmDeleteButton, EmptyState, FormStatusNote } from "@/components/form-controls";
+import type { VaultAsset, VaultAuditLog, VaultAssetType } from "@/lib/types";
+import { ConfirmDeleteButton, EditorSection, EmptyState, FormStatusNote } from "@/components/form-controls";
 
 function Field({
   name,
@@ -42,6 +42,9 @@ function CreateVaultAssetPanel({
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   statusMessage?: string;
 }) {
+  const [assetType, setAssetType] = useState<VaultAssetType>("Token");
+  const copy = getVaultFieldCopy(assetType);
+
   return (
     <div className="card detail-card">
       <div className="card-title">
@@ -50,24 +53,29 @@ function CreateVaultAssetPanel({
           <p className="microcopy">Secrets are encrypted at rest and listed as masked previews only.</p>
         </div>
       </div>
-      <form className="form" onSubmit={onSubmit}>
-        <div className="form-pair">
-          <label className="field">
-            <span>Type</span>
-            <select name="assetType" defaultValue="Token">
-              {vaultAssetTypes.map((assetType) => (
-                <option key={assetType}>{assetType}</option>
-              ))}
-            </select>
-          </label>
-          <Field name="provider" label="Provider" placeholder="OpenAI, HF, GitHub, cluster" />
-        </div>
-        <Field name="name" label="Name" placeholder="e.g. OpenAI research key" required />
-        <Field name="secret" label="Secret value" placeholder="Only required for Token assets" />
-        <Field name="metadata" label="Metadata" placeholder="usage_scope=graph analysis&#10;environment=local" textarea />
-        <p className="microcopy">
-          Do not store SSH private keys or root passwords. Server entries should use host metadata and aliases only.
-        </p>
+      <form className="form editor-form" onSubmit={onSubmit}>
+        <EditorSection title="Asset" description={copy.sectionDescription}>
+          <div className="form-pair">
+            <label className="field">
+              <span>Type</span>
+              <select name="assetType" onChange={(event) => setAssetType(event.target.value as VaultAssetType)} value={assetType}>
+                {vaultAssetTypes.map((item) => (
+                  <option key={item}>{item}</option>
+                ))}
+              </select>
+            </label>
+            <Field name="provider" label={copy.providerLabel} placeholder={copy.providerPlaceholder} />
+          </div>
+          <Field name="name" label="Name" placeholder={copy.namePlaceholder} required />
+          <Field name="secret" label={copy.secretLabel} placeholder={copy.secretPlaceholder} />
+          <Field name="metadata" label="Metadata" placeholder={copy.metadataPlaceholder} textarea />
+          <p className="microcopy">
+            {copy.metadataHint}
+          </p>
+          <p className="microcopy">
+            Do not store SSH private keys or root passwords. Server entries should use host metadata and aliases only.
+          </p>
+        </EditorSection>
         <div className="form-actions">
           {statusMessage && <FormStatusNote tone="success">{statusMessage}</FormStatusNote>}
           <button className="button" disabled={disabled} type="submit">
@@ -191,6 +199,9 @@ function VaultAssetDetailPanel({
   revealedSecret: string | null;
   statusMessage?: string;
 }) {
+  const [assetType, setAssetType] = useState<VaultAssetType>(asset.assetType);
+  const copy = getVaultFieldCopy(assetType);
+
   return (
     <div className="card detail-card">
       <div className="card-title">
@@ -202,36 +213,39 @@ function VaultAssetDetailPanel({
           Close
         </button>
       </div>
-      <form className="form" key={asset.id} onSubmit={(event) => onSubmit(event, asset.id)}>
-        <div className="form-pair">
-          <label className="field">
-            <span>Type</span>
-            <select name="assetType" defaultValue={asset.assetType}>
-              {vaultAssetTypes.map((assetType) => (
-                <option key={assetType}>{assetType}</option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            <span>Status</span>
-            <select name="status" defaultValue={asset.status}>
-              {["Active", "Expired", "Revoked", "Archived"].map((status) => (
-                <option key={status}>{status}</option>
-              ))}
-            </select>
-          </label>
-        </div>
-        <Field defaultValue={asset.name} name="name" label="Name" placeholder="Asset name" required />
-        <Field defaultValue={asset.provider} name="provider" label="Provider" placeholder="Provider or host" />
-        <Field name="secret" label="Rotate secret" placeholder="Leave blank to keep the current encrypted secret" />
-        <Field
-          defaultValue={formatMetadataLines(asset.metadata)}
-          name="metadata"
-          label="Metadata"
-          placeholder="key=value"
-          textarea
-        />
-        {asset.maskedPreview && <p className="secret-preview">{revealedSecret ?? asset.maskedPreview}</p>}
+      <form className="form editor-form" key={asset.id} onSubmit={(event) => onSubmit(event, asset.id)}>
+        <EditorSection title="Asset" description={copy.sectionDescription}>
+          <div className="form-pair">
+            <label className="field">
+              <span>Type</span>
+              <select name="assetType" onChange={(event) => setAssetType(event.target.value as VaultAssetType)} value={assetType}>
+                {vaultAssetTypes.map((item) => (
+                  <option key={item}>{item}</option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              <span>Status</span>
+              <select defaultValue={asset.status} name="status">
+                {["Active", "Expired", "Revoked", "Archived"].map((status) => (
+                  <option key={status}>{status}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <Field defaultValue={asset.name} name="name" label="Name" placeholder={copy.namePlaceholder} required />
+          <Field defaultValue={asset.provider} name="provider" label={copy.providerLabel} placeholder={copy.providerPlaceholder} />
+          <Field name="secret" label={copy.secretLabel} placeholder={copy.secretPlaceholder} />
+          <Field
+            defaultValue={formatMetadataLines(asset.metadata)}
+            name="metadata"
+            label="Metadata"
+            placeholder={copy.metadataPlaceholder}
+            textarea
+          />
+          <p className="microcopy">{copy.metadataHint}</p>
+          {asset.maskedPreview && <p className="secret-preview">{revealedSecret ?? asset.maskedPreview}</p>}
+        </EditorSection>
         <div className="form-actions">
           {statusMessage && <FormStatusNote tone="success">{statusMessage}</FormStatusNote>}
           {asset.maskedPreview && (
@@ -252,6 +266,58 @@ function VaultAssetDetailPanel({
       </form>
     </div>
   );
+}
+
+function getVaultFieldCopy(assetType: VaultAssetType) {
+  if (assetType === "Server") {
+    return {
+      metadataHint: "Record alias, region, ssh host, queue name, and any safe runtime notes.",
+      metadataPlaceholder: "host=compute-01\nregion=ap-southeast\nqueue=a100",
+      namePlaceholder: "e.g. A100 training box",
+      providerLabel: "Host or cluster",
+      providerPlaceholder: "AWS, on-prem, Slurm cluster",
+      secretLabel: "Access note",
+      secretPlaceholder: "Optional token or note for audited reveal",
+      sectionDescription: "Keep infrastructure references easy to reuse without storing raw root credentials."
+    };
+  }
+
+  if (assetType === "Platform") {
+    return {
+      metadataHint: "Capture workspace, org, project, or rate-limit notes that help future runs.",
+      metadataPlaceholder: "workspace=research-lab\nproject=graph-memory\nrate_limit=standard",
+      namePlaceholder: "e.g. Weights & Biases workspace",
+      providerLabel: "Platform",
+      providerPlaceholder: "W&B, Hugging Face, OpenAI",
+      secretLabel: "API token",
+      secretPlaceholder: "Optional token for this platform",
+      sectionDescription: "Store the platform context that experiments depend on."
+    };
+  }
+
+  if (assetType === "Template") {
+    return {
+      metadataHint: "Use metadata for reusable commands, run presets, model families, or prompt packs.",
+      metadataPlaceholder: "template_kind=launch\nentrypoint=python train.py\nowner=team",
+      namePlaceholder: "e.g. Baseline run template",
+      providerLabel: "Template family",
+      providerPlaceholder: "training, eval, prompt, deployment",
+      secretLabel: "Protected field",
+      secretPlaceholder: "Optional secret referenced by the template",
+      sectionDescription: "Templates work best when they describe reusable structure, not just one-off secrets."
+    };
+  }
+
+  return {
+    metadataHint: "Use metadata for scope, environment, and rotation notes.",
+    metadataPlaceholder: "usage_scope=graph analysis\nenvironment=local\nrotation=monthly",
+    namePlaceholder: "e.g. OpenAI research key",
+    providerLabel: "Provider",
+    providerPlaceholder: "OpenAI, HF, GitHub, cluster",
+    secretLabel: "Secret value",
+    secretPlaceholder: "Encrypted at rest. Leave blank only if there is no secret yet.",
+    sectionDescription: "Token assets are best for keys and short-lived credentials used by experiments or map analysis."
+  };
 }
 
 export { CreateVaultAssetPanel, VaultAssetDetailPanel, VaultAssetList, VaultAuditList };
